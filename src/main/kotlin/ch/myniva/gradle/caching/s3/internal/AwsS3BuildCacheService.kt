@@ -30,7 +30,8 @@ class AwsS3BuildCacheService internal constructor(
     private val s3: AmazonS3,
     private val bucketName: String,
     private val path: String?,
-    private val reducedRedundancy: Boolean
+    private val reducedRedundancy: Boolean,
+    private val maximumCachedObjectLength: Long
 ) : BuildCacheService {
     companion object {
         private const val BUILD_CACHE_CONTENT_TYPE = "application/vnd.gradle.build-cache-artifact"
@@ -49,6 +50,16 @@ class AwsS3BuildCacheService internal constructor(
         val bucketPath = key.getBucketPath()
         try {
             s3.getObject(bucketName, bucketPath).use { s3Object ->
+                if (s3Object.objectMetadata.contentLength > maximumCachedObjectLength) {
+                    logger.info(
+                        "Cache item '{}' '{}' in S3 bucket size is {}, and it exceeds maximumCachedObjectLength {}. Will skip the retrieval",
+                        key.displayName,
+                        bucketPath,
+                        s3Object.objectMetadata.contentLength,
+                        maximumCachedObjectLength
+                    )
+                    return false
+                }
                 reader.readFrom(s3Object.objectContent)
             }
             return true
@@ -76,6 +87,17 @@ class AwsS3BuildCacheService internal constructor(
 
     override fun store(key: BuildCacheKey, writer: BuildCacheEntryWriter) {
         val bucketPath = key.getBucketPath()
+        val itemSize = writer.size
+        if (itemSize > maximumCachedObjectLength) {
+            logger.info(
+                "Cache item '{}' '{}' in S3 bucket size is {}, and it exceeds maximumCachedObjectLength {}. Will skip caching it.",
+                key.displayName,
+                bucketPath,
+                itemSize,
+                maximumCachedObjectLength
+            )
+            return
+        }
         logger.info("Start storing cache entry '{}' in S3 bucket", bucketPath)
         val meta = ObjectMetadata().apply {
             contentType = BUILD_CACHE_CONTENT_TYPE

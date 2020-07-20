@@ -47,6 +47,7 @@ The AWS S3 build cache implementation has a few configuration options:
 | `region` | The AWS region the S3 bucket is located in. | yes | |
 | `bucket` | The name of the AWS S3 bucket where cache objects should be stored. | yes | |
 | `path` | The path under which all cache objects should be stored. | no | |
+| `maximumCachedObjectLength` | Maximum object size that can be stored and retrieved from the cache | no | 50'000'000 |
 | `reducedRedundancy` | Whether or not to use [reduced redundancy](https://aws.amazon.com/s3/reduced-redundancy/). | no | true |
 | `endpoint` | Alternative S3 compatible endpoint | no | |
 | `headers` | A map with HTTP headers to be added to each request (nulls are ignored). e.g. `[ 'x-header-name': 'header-value' ]` | no | |
@@ -61,9 +62,9 @@ The `buildCache` configuration block might look like this:
 
 ```
  apply plugin: 'ch.myniva.s3-build-cache'
- 
+
  ext.isCiServer = System.getenv().containsKey("CI")
- 
+
  buildCache {
      local {
          enabled = !isCiServer
@@ -74,7 +75,6 @@ The `buildCache` configuration block might look like this:
          push = isCiServer
      }
  }
-
 ```
 
 More details about configuring the Gradle build cache can be found in the

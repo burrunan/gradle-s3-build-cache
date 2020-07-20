@@ -21,6 +21,7 @@ open class AwsS3BuildCache : AbstractBuildCache() {
     var region: String? = null
     var bucket: String? = null
     var path: String? = null
+    var maximumCachedObjectLength: Long = 50 * 1024 * 1024
     var isReducedRedundancy = true
     var endpoint: String? = null
     var headers: Map<String?, String?>? = null
