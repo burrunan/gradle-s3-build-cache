@@ -17,8 +17,10 @@ package ch.myniva.gradle.caching.s3.internal
 
 import ch.myniva.gradle.caching.s3.AwsS3BuildCache
 import com.amazonaws.ClientConfiguration
-import com.amazonaws.auth.*
-import com.amazonaws.auth.profile.ProfileCredentialsProvider
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.AnonymousAWSCredentials
+import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.auth.BasicSessionCredentials
 import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import org.gradle.caching.BuildCacheService
@@ -92,23 +94,21 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
     }
 
     private fun AmazonS3ClientBuilder.addCredentials(config: AwsS3BuildCache) {
-        val credentials =
-            if (config.awsAccessKeyId.isNullOrEmpty() || config.awsSecretKey.isNullOrEmpty()) {
-                return
-            } else {
-                AWSStaticCredentialsProvider(
-                    if (config.awsAccessKeyId.isNullOrEmpty()) {
-                        BasicAWSCredentials(config.awsAccessKeyId, config.awsSecretKey)
-                    } else {
-                        BasicSessionCredentials(
-                            config.awsAccessKeyId,
-                            config.awsSecretKey,
-                            config.sessionToken
-                        )
-                    }
-                )
+        val credentials = when {
+            config.awsAccessKeyId.isNullOrBlank() && config.awsSecretKey.isNullOrBlank() -> when {
+                config.lookupDefaultAwsCredentials -> return
+                else -> AnonymousAWSCredentials()
             }
+            config.awsAccessKeyId.isNullOrEmpty() ->
+                BasicAWSCredentials(config.awsAccessKeyId, config.awsSecretKey)
+            else ->
+                BasicSessionCredentials(
+                    config.awsAccessKeyId,
+                    config.awsSecretKey,
+                    config.sessionToken
+                )
+        }
 
-        withCredentials(credentials)
+        withCredentials(AWSStaticCredentialsProvider(credentials))
     }
 }

@@ -24,7 +24,8 @@ open class AwsS3BuildCache : AbstractBuildCache() {
     var isReducedRedundancy = true
     var endpoint: String? = null
     var headers: Map<String?, String?>? = null
-    var awsAccessKeyId: String? = null
-    var awsSecretKey: String? = null
-    var sessionToken: String? = null
+    var awsAccessKeyId: String? = System.getenv("S3_BUILD_CACHE_ACCESS_KEY_ID")
+    var awsSecretKey: String? = System.getenv("S3_BUILD_CACHE_SECRET_KEY")
+    var sessionToken: String? = System.getenv("S3_BUILD_CACHE_SESSION_TOKEN")
+    var lookupDefaultAwsCredentials: Boolean = false
 }

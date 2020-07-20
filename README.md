@@ -50,10 +50,12 @@ The AWS S3 build cache implementation has a few configuration options:
 | `reducedRedundancy` | Whether or not to use [reduced redundancy](https://aws.amazon.com/s3/reduced-redundancy/). | no | true |
 | `endpoint` | Alternative S3 compatible endpoint | no | |
 | `headers` | A map with HTTP headers to be added to each request (nulls are ignored). e.g. `[ 'x-header-name': 'header-value' ]` | no | |
-| `awsAccessKeyId` | The AWS access key id | no | from DefaultAWSCredentialsProviderChain |
-| `awsSecretKey` | The AWS secret key | no | from DefaultAWSCredentialsProviderChain |
-| `sessionToken` | The AWS sessionToken when you use temporal credentials | no | from DefaultAWSCredentialsProviderChain |
+| `awsAccessKeyId` | The AWS access key id | no | `getenv("S3_BUILD_CACHE_ACCESS_KEY_ID")` |
+| `awsSecretKey` | The AWS secret key | no | `getenv("S3_BUILD_CACHE_SECRET_KEY")` |
+| `sessionToken` | The AWS sessionToken when you use temporal credentials | no | `getenv("S3_BUILD_CACHE_SESSION_TOKEN")` |
+| `lookupDefaultAwsCredentials` | Configures if `DefaultAWSCredentialsProviderChain` could be used to lookup credentials | yes | false | 
 
+Note: if both `awsAccessKeyId` and `awsSecretKey` are `nullOrBlank` (`null` or whitespace only), then anonymous credentials are used.
 
 The `buildCache` configuration block might look like this:
 
@@ -79,17 +81,20 @@ More details about configuring the Gradle build cache can be found in the
 [official Gradle documentation](https://docs.gradle.org/current/userguide/build_cache.html#sec:build_cache_configure).
 
 
-### AWS credentials
+### S3 credentials
 
-The plugin uses the [`DefaultAWSCredentialsProviderChain`](http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html)
-to look up the AWS credentials.
-If you want to override the credentials feel free to set `awsAccessKeyId` and `awsSecretKey` and (optionally depends on
-configuration) `sessionToken`. If they are set the plugin will ignore `DefaultAWSCredentialsProviderChain`.
+It is recommended you specify credentials that have limited access to S3 resources, that is why
+plugin retrieves credentials from `S3_BUILD_CACHE_ACCESS_KEY_ID`, `S3_BUILD_CACHE_SECRET_KEY`, and `S3_BUILD_CACHE_SESSION_TOKEN`
+environment variables.
 
-### S3 Bucket Permissions
+If you want to use AWS default credentials [`DefaultAWSCredentialsProviderChain`](http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html),
+then configure `lookupDefaultAwsCredentials=true`.
+Note: it will still try `S3_BUILD_CACHE_` variables first.
 
-The AWS credential must have at least the following permissions to the bucket:
+### S3 Bucket Permissions for cache population
 
+Note: if you use a path prefix (e.g. `build-cache`), you might want to configure the permission to that subfolder only. 
+ 
 ```json
 {
   "Version": "2012-10-17",
@@ -97,13 +102,33 @@ The AWS credential must have at least the following permissions to the bucket:
     {
       "Effect": "Allow",
       "Action": [
-          "s3:PutObject",
-          "s3:GetObject",
-          "s3:ListBucket"
+          "s3:PutObject"
       ],
       "Resource": [
-          "arn:aws:s3:::your-bucket/*",
-          "arn:aws:s3:::your-bucket"
+          "arn:aws:s3:::your-bucket/*"
+      ]
+    }
+  ]
+}
+```
+
+### S3 Bucket Permissions for reading data from the cache
+
+If you use a path prefix (e.g. `build-cache`), you might want to configure the permission to that subfolder only.
+
+Note: if you don't have enough permissions to access the item, it will be treated as "cache miss".  
+ 
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+          "s3:GetObject"
+      ],
+      "Resource": [
+          "arn:aws:s3:::your-bucket/*"
       ]
     }
   ]
