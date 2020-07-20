@@ -1,2 +1,13 @@
 # Gradle
-build/
+*~
+.DS_Store
+.gradle
+/build
+
+# IDEA
+/out
+# The star is required for further !/.idea/ to work, see https://git-scm.com/docs/gitignore
+/.idea/*
+# Icon for JetBrains Toolbox
+!/.idea/icon.png
+*.iml
