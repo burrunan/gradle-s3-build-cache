@@ -1,3 +1,4 @@
+import com.github.vlsi.gradle.dsl.configureEach
 import org.gradle.api.tasks.wrapper.Wrapper.DistributionType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -7,6 +8,7 @@ plugins {
     id("com.gradle.plugin-publish") version "0.9.7"
     id("org.shipkit.java") version "2.3.4"
     id("org.shipkit.gradle-plugin") version "2.3.4"
+    id("com.github.vlsi.gradle-extensions") version "1.70"
 }
 
 repositories {
@@ -33,8 +35,10 @@ kotlinDslPluginOptions {
 dependencies {
     implementation("com.amazonaws:aws-java-sdk-s3:1.11.751")
 
-    testImplementation("junit:junit:4.13")
-    testImplementation("org.mockito:mockito-core:2.28.2")
+    testImplementation(platform("org.junit:junit-bom:5.7.0-M1"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
 gradlePlugin {
@@ -63,4 +67,16 @@ pluginBundle {
 tasks.wrapper {
     gradleVersion = "5.6.4"
     distributionType = DistributionType.ALL
+}
+
+tasks.configureEach<Test> {
+    useJUnitPlatform()
+    // Pass the property to tests
+    fun passProperty(name: String, default: String? = null) {
+        val value = System.getProperty(name) ?: default
+        value?.let { systemProperty(name, it) }
+    }
+    passProperty("junit.jupiter.execution.parallel.enabled", "true")
+    passProperty("junit.jupiter.execution.parallel.mode.default", "concurrent")
+    passProperty("junit.jupiter.execution.timeout.default", "5 m")
 }
