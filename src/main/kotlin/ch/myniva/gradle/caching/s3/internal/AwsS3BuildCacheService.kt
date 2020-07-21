@@ -45,20 +45,25 @@ class AwsS3BuildCacheService internal constructor(
     private val cacheStores = Stopwatch()
 
     override fun close() {
-        fun Long.mib() = (this + 512L * 1024) / (1024L * 1024)
+        fun Long.byteUnits() = when {
+            this < 5*1024 -> "${this} B"
+            this < 5*1024*1204 -> "${(this + 512L) / (1024L)} KiB"
+            this < 5L*1024*1204*1024 -> "${(this + 512L * 1024) / (1024L * 1024)} MiB"
+            else -> "${(this + 512L * 1024 * 1024) / (1024L * 1024 * 1024)} GiB"
+        }
 
         s3.shutdown()
         if (cacheLoads.starts != 0) {
             logger.log(
                 if (cacheHits.elapsed > 1000) LogLevel.LIFECYCLE else LogLevel.INFO,
-                "S3 cache reads: ${cacheHits.starts}, requests: ${cacheLoads.starts}, " +
-                        "elapsed time: ${cacheLoads.elapsed}ms, processed: ${cacheLoads.bytes.mib()}MiB"
+                "S3 cache reads: ${cacheLoads.starts}, hits: ${cacheHits.starts}, " +
+                        "elapsed time: ${cacheLoads.elapsed}ms, processed: ${cacheLoads.bytes.byteUnits()}"
             )
         }
         if (cacheStores.starts != 0) {
             logger.lifecycle(
                 "S3 cache writes: ${cacheStores.starts}, " +
-                        "elapsed time: ${cacheStores.elapsed}ms, sent to cache: ${cacheStores.bytes.mib()}MiB"
+                        "elapsed time: ${cacheStores.elapsed}ms, sent to cache: ${cacheStores.bytes.byteUnits()}"
             )
         }
     }

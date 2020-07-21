@@ -77,6 +77,7 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
                 )
             )
         }
+        enablePathStyleAccess()
         build()
     }
 

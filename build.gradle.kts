@@ -38,6 +38,12 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.7.0-M1"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
+    testImplementation("com.adobe.testing:s3mock-junit5:2.1.22") {
+        // Gradle has its own logging
+        exclude("ch.qos.logback", "logback-classic")
+        exclude("org.apache.logging.log4j", "log4j-to-slf4j")
+        exclude("org.slf4j", "jul-to-slf4j")
+    }
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
@@ -71,6 +77,11 @@ tasks.wrapper {
 
 tasks.configureEach<Test> {
     useJUnitPlatform()
+    // Keystore configuration for S3Mock server
+    systemProperty("server.ssl.key-store", "classpath:test_keystore.jks")
+    systemProperty("server.ssl.key-store-password", "password")
+    systemProperty("server.ssl.key-alias", "selfsigned")
+    systemProperty("server.ssl.key-password", "password")
     // Pass the property to tests
     fun passProperty(name: String, default: String? = null) {
         val value = System.getProperty(name) ?: default
