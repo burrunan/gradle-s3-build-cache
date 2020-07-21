@@ -60,21 +60,50 @@ Note: if both `awsAccessKeyId` and `awsSecretKey` are `nullOrBlank` (`null` or w
 
 The `buildCache` configuration block might look like this:
 
+Groovy DSL
+
+```gradle
+// This goes to settings.gradle
+
+apply plugin: 'ch.myniva.s3-build-cache'
+
+ext.isCiServer = System.getenv().containsKey("CI")
+
+buildCache {
+    local {
+        enabled = !isCiServer
+    }
+    remote(ch.myniva.gradle.caching.s3.AwsS3BuildCache) {
+        region = 'eu-west-1'
+        bucket = 'your-bucket'
+        path = 'build-cache'
+        push = isCiServer
+    }
+}
 ```
- apply plugin: 'ch.myniva.s3-build-cache'
 
- ext.isCiServer = System.getenv().containsKey("CI")
+Kotlin DSL:
 
- buildCache {
-     local {
-         enabled = !isCiServer
-     }
-     remote(ch.myniva.gradle.caching.s3.AwsS3BuildCache) {
-         region = 'eu-west-1'
-         bucket = 'your-bucket'
-         push = isCiServer
-     }
- }
+```kotlin
+// This goes to settings.gradle.kts
+
+plugins {
+    id("ch.myniva.s3-build-cache") version "0.10.0"
+}
+
+val isCiServer = System.getenv().containsKey("CI")
+
+buildCache {
+    local {
+        enabled = !isCiServer
+    }
+    remote<ch.myniva.gradle.caching.s3.AwsS3BuildCache> {
+        region = "eu-west-1"
+        bucket = "your-bucket"
+        path = "build-cache"
+        push = isCiServer
+    }
+}
 ```
 
 More details about configuring the Gradle build cache can be found in the
