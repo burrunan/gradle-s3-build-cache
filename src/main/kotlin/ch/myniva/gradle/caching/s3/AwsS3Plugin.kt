@@ -18,13 +18,11 @@ package ch.myniva.gradle.caching.s3
 import ch.myniva.gradle.caching.s3.internal.AwsS3BuildCacheServiceFactory
 import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
-import org.slf4j.LoggerFactory
+import org.gradle.api.logging.Logging
+
+private val logger = Logging.getLogger(AwsS3Plugin::class.java)
 
 class AwsS3Plugin : Plugin<Settings> {
-    companion object {
-        private val logger = LoggerFactory.getLogger(AwsS3Plugin::class.java)
-    }
-
     override fun apply(settings: Settings) {
         logger.info("Registering S3 build cache")
         settings.buildCache.registerBuildCacheService(

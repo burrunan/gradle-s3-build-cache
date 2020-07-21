@@ -20,11 +20,14 @@ import com.amazonaws.services.s3.model.AmazonS3Exception
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.model.StorageClass
+import org.gradle.api.logging.LogLevel
+import org.gradle.api.logging.Logging
 import org.gradle.caching.*
-import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+
+private val logger = Logging.getLogger(AwsS3BuildCacheService::class.java)
 
 class AwsS3BuildCacheService internal constructor(
     private val s3: AmazonS3,
@@ -35,10 +38,30 @@ class AwsS3BuildCacheService internal constructor(
 ) : BuildCacheService {
     companion object {
         private const val BUILD_CACHE_CONTENT_TYPE = "application/vnd.gradle.build-cache-artifact"
-        private val logger = LoggerFactory.getLogger(AwsS3BuildCacheService::class.java)
     }
 
-    override fun close() = s3.shutdown()
+    private val cacheLoads = Stopwatch()
+    private val cacheHits = Stopwatch()
+    private val cacheStores = Stopwatch()
+
+    override fun close() {
+        fun Long.mib() = (this + 512L * 1024) / (1024L * 1024)
+
+        s3.shutdown()
+        if (cacheLoads.starts != 0) {
+            logger.log(
+                if (cacheHits.elapsed > 1000) LogLevel.LIFECYCLE else LogLevel.INFO,
+                "S3 cache reads: ${cacheHits.starts}, requests: ${cacheLoads.starts}, " +
+                        "elapsed time: ${cacheLoads.elapsed}ms, processed: ${cacheLoads.bytes.mib()}MiB"
+            )
+        }
+        if (cacheStores.starts != 0) {
+            logger.lifecycle(
+                "S3 cache writes: ${cacheStores.starts}, " +
+                        "elapsed time: ${cacheStores.elapsed}ms, sent to cache: ${cacheStores.bytes.mib()}MiB"
+            )
+        }
+    }
 
     private fun BuildCacheKey.getBucketPath() = if (path.isNullOrEmpty()) {
         hashCode
@@ -46,21 +69,29 @@ class AwsS3BuildCacheService internal constructor(
         "$path/$hashCode"
     }
 
-    override fun load(key: BuildCacheKey, reader: BuildCacheEntryReader): Boolean {
+    override fun load(key: BuildCacheKey, reader: BuildCacheEntryReader): Boolean = cacheLoads {
+        loadInternal(key, reader)
+    }
+
+    private fun Stopwatch.loadInternal(key: BuildCacheKey, reader: BuildCacheEntryReader): Boolean {
         val bucketPath = key.getBucketPath()
         try {
             s3.getObject(bucketName, bucketPath).use { s3Object ->
-                if (s3Object.objectMetadata.contentLength > maximumCachedObjectLength) {
+                val contentLength = s3Object.objectMetadata.contentLength
+                if (contentLength > maximumCachedObjectLength) {
                     logger.info(
                         "Cache item '{}' '{}' in S3 bucket size is {}, and it exceeds maximumCachedObjectLength {}. Will skip the retrieval",
                         key.displayName,
                         bucketPath,
-                        s3Object.objectMetadata.contentLength,
+                        contentLength,
                         maximumCachedObjectLength
                     )
                     return false
                 }
-                reader.readFrom(s3Object.objectContent)
+                bytesProcessed(contentLength)
+                cacheHits {
+                    reader.readFrom(s3Object.objectContent)
+                }
             }
             return true
         } catch (e: AmazonS3Exception) {
@@ -85,7 +116,11 @@ class AwsS3BuildCacheService internal constructor(
         }
     }
 
-    override fun store(key: BuildCacheKey, writer: BuildCacheEntryWriter) {
+    override fun store(key: BuildCacheKey, writer: BuildCacheEntryWriter) = cacheStores {
+        storeInternal(key, writer)
+    }
+
+    private fun Stopwatch.storeInternal(key: BuildCacheKey, writer: BuildCacheEntryWriter) {
         val bucketPath = key.getBucketPath()
         val itemSize = writer.size
         if (itemSize > maximumCachedObjectLength) {
@@ -98,6 +133,7 @@ class AwsS3BuildCacheService internal constructor(
             )
             return
         }
+        bytesProcessed(itemSize)
         logger.info("Start storing cache entry '{}' in S3 bucket", bucketPath)
         val meta = ObjectMetadata().apply {
             contentType = BUILD_CACHE_CONTENT_TYPE
@@ -118,5 +154,4 @@ class AwsS3BuildCacheService internal constructor(
             throw BuildCacheException("Error while storing cache object in S3 bucket", e)
         }
     }
-
 }

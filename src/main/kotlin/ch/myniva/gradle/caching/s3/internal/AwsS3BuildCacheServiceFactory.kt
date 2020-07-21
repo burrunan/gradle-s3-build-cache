@@ -27,11 +27,9 @@ import org.gradle.caching.BuildCacheService
 import org.gradle.caching.BuildCacheServiceFactory
 import org.slf4j.LoggerFactory
 
-class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> {
-    companion object {
-        private val logger = LoggerFactory.getLogger(AwsS3BuildCacheServiceFactory::class.java)
-    }
+private val logger = LoggerFactory.getLogger(AwsS3BuildCacheServiceFactory::class.java)
 
+class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> {
     override fun createBuildCacheService(
         config: AwsS3BuildCache,
         describer: BuildCacheServiceFactory.Describer
