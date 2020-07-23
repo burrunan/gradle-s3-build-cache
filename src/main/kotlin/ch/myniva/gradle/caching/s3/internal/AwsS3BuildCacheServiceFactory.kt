@@ -49,7 +49,8 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
             config.bucket!!,
             config.path,
             config.isReducedRedundancy,
-            config.maximumCachedObjectLength
+            config.maximumCachedObjectLength,
+            config.showStatistics
         )
     }
 

@@ -32,6 +32,12 @@ class Stopwatch {
         bytesProcessed.addAndGet(bytes)
     }
 
+    fun increment(duration: Long, bytesProcessed: Long = 0) {
+        this.elapsedTime.addAndGet(duration)
+        this.bytesProcessed.addAndGet(bytesProcessed)
+        this.startCount.incrementAndGet()
+    }
+
     operator fun <T> invoke(bytes: Long = 0, action: Stopwatch.() -> T): T {
         val startTime = System.currentTimeMillis()
         startCount.incrementAndGet()
