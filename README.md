@@ -55,6 +55,7 @@ The AWS S3 build cache implementation has a few configuration options:
 | `awsSecretKey` | The AWS secret key | no | `getenv("S3_BUILD_CACHE_SECRET_KEY")` |
 | `sessionToken` | The AWS sessionToken when you use temporal credentials | no | `getenv("S3_BUILD_CACHE_SESSION_TOKEN")` |
 | `lookupDefaultAwsCredentials` | Configures if `DefaultAWSCredentialsProviderChain` could be used to lookup credentials | yes | false | 
+| `showStatistics` | Displays statistics on the remote cache performance | Yes | `true` |
 
 Note: if both `awsAccessKeyId` and `awsSecretKey` are `nullOrBlank` (`null` or whitespace only), then anonymous credentials are used.
 
@@ -163,6 +164,51 @@ Note: if you don't have enough permissions to access the item, it will be treate
   ]
 }
 ```
+
+### Measuring cache efficiency
+
+It is important to measure the efficiency of the caching, otherwise it might happen the caching increases
+build time (e.g. it downloads too large artifacts over a slow network or cache misses are too frequent).
+
+Luckily many cache items include the time it took to build the task, so when the item is loaded
+from the cache, the time saved can be estimated as `original_task_elapsed_time - from_cache_task_elapsed_time`.
+
+The plugin prints cache statistics at the end of the build (you can disable it with `showStatistics=false`):
+
+```
+BUILD SUCCESSFUL in 6s
+1 actionable task: 1 executed
+S3 cache saved: 0ms, wasted: 233ms, reads: 1, hits: 0, elapsed: 233ms, processed: 0 B
+S3 cache writes: 1, elapsed: 121ms, sent to cache: 472 B
+```
+
+S3 reads:
+* `saved: 0ms` – the estimated time saved by the remote build cache (`original_task_elapsed_time - from_cache_task_elapsed_time`).
+Note: this estimation does not account for parallel task execution. Negative estimation means it is
+probably faster to build task from scratch rather than download the cached results.
+* `wasted: 233ms` – the amount of time spent for `cache misses`
+* `reads: 1` – number load requests to the remote cache
+* `hits: 0` – number items loaded from the remote cache
+* `elapsed: 233ms` – total time spent on loading items from remote cache
+* `processed: 0 B` – number of bytes loaded from the remote cache
+
+S3 writes:
+* `cache writes: 1` – number of store requests to the remote cache
+* `elapsed: 115ms` – time spent uploading items to the remote cache
+* `sent to cache: 472 B` – number of bytes sent to the remote cache
+
+### S3 metadata
+
+The stored cache entries might include metadata. The metadata helps to estimate cache efficiency,
+and it might be useful to analyze space consumption.
+
+| Key               | Type        |  Sample                    | Description |
+| ----------------- | ----------- | -------------------------- | ----------- |
+| buildInvocationId | String      | rpha3qmrzvbnxhmdlvukwcx7ru | Build Id |
+| identity          | String      | :example:test              | Task identifier |
+| executionTime     | Long        | 189871                     | Task execution time, milliseconds |
+| operatingSystem   | String      | Linux                      | Operating system |
+| gradleVersion     | String      | 6.3                        | Gradle version |
 
 ### Expiring cache entries
 

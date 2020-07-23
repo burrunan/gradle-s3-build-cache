@@ -34,6 +34,7 @@ kotlinDslPluginOptions {
 
 dependencies {
     implementation("com.amazonaws:aws-java-sdk-s3:1.11.751")
+    compileOnly("org.apache.ant:ant:1.9.6")
 
     testImplementation(platform("org.junit:junit-bom:5.7.0-M1"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
@@ -45,6 +46,7 @@ dependencies {
         exclude("org.slf4j", "jul-to-slf4j")
     }
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("org.apache.ant:ant:1.9.6")
 }
 
 gradlePlugin {
