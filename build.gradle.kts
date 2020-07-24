@@ -87,8 +87,8 @@ pluginBundle {
     description = "An AWS S3 build cache implementation"
     tags = listOf("build-cache", "s3")
 
-    plugins {
-        named("s3BuildCache") {
+    (plugins) {
+        "s3BuildCache" {
             id = "com.github.burrunan.s3-build-cache"
             displayName = "AWS S3 build cache"
         }
