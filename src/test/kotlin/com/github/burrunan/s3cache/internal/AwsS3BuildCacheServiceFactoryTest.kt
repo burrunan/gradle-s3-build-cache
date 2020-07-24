@@ -50,11 +50,11 @@ class AwsS3BuildCacheServiceFactoryTest {
     }
 
     @Test
-    fun testPath() {
+    fun prefix() {
         val conf = buildCache {
             region = "us-west-1"
             bucket = "my-bucket"
-            path = "cache"
+            prefix = "cache"
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)

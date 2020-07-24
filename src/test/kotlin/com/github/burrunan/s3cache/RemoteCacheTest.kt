@@ -115,7 +115,7 @@ class RemoteCacheTest: BaseGradleTest() {
                 remote(com.github.burrunan.s3cache.AwsS3BuildCache) {
                     region = 'eu-west-1'
                     bucket = '$BUCKET_NAME'
-                    path = 'build-cache'
+                    prefix = 'build-cache/'
                     endpoint = 'localhost:${mockApp.port}'
                     push = true
                 }
