@@ -6,8 +6,6 @@ plugins {
     `maven-publish`
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "0.9.7"
-    id("org.shipkit.java") version "2.3.4"
-    id("org.shipkit.gradle-plugin") version "2.3.4"
     id("com.github.vlsi.gradle-extensions") version "1.70"
 }
 
