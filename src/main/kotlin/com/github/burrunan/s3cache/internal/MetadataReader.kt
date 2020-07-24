@@ -16,7 +16,7 @@
  */
 package com.github.burrunan.s3cache.internal
 
-import org.apache.tools.tar.TarInputStream
+import com.github.burrunan.s3cache.internal.tar.TarInputStream
 import org.gradle.caching.BuildCacheEntryWriter
 import java.io.File
 import java.nio.charset.StandardCharsets
