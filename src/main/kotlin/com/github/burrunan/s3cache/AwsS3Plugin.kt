@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.myniva.gradle.caching.s3
+package com.github.burrunan.s3cache
 
-import ch.myniva.gradle.caching.s3.internal.AwsS3BuildCacheServiceFactory
-import ch.myniva.gradle.caching.s3.internal.CURRENT_TASK
-import ch.myniva.gradle.caching.s3.internal.TaskPerformanceInfo
+import com.github.burrunan.s3cache.internal.AwsS3BuildCacheServiceFactory
+import com.github.burrunan.s3cache.internal.CURRENT_TASK
+import com.github.burrunan.s3cache.internal.TaskPerformanceInfo
 import org.gradle.api.Plugin
 import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionListener

@@ -1,4 +1,4 @@
-package ch.myniva.gradle.caching.s3.internal
+package com.github.burrunan.s3cache.internal
 
 import org.gradle.caching.BuildCacheEntryWriter
 import java.io.File

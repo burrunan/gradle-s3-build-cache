@@ -1,25 +1,25 @@
 shipkit {
-    gitHub.repository = 'myniva/gradle-s3-build-cache'
+    gitHub.repository = 'burrunan/gradle-s3-build-cache'
     gitHub.readOnlyAuthToken = 'ab42092bbcb17092fe465f43129f819466f5362f'
     gitHub.writeAuthToken = System.getenv('GH_WRITE_TOKEN')
 
-    git.user = 'Basil Brunner'
-    git.email = 'myniva@mailbox.org'
+    git.user = 'Vladimir Sitnikov'
+    git.email = 'sitnikov.vladimir@gmail.com'
 
-    team.developers = ['myniva:Basil Brunner']
+    team.developers = ['vlsi:Vladimir Sitnikov']
 
-    releaseNotes.publicationRepository = 'https://plugins.gradle.org/plugin/ch.myniva.s3-build-cache'
+    releaseNotes.publicationRepository = 'https://plugins.gradle.org/plugin/com.github.burrunan.s3-build-cache'
 }
 
 allprojects {
     plugins.withId("org.shipkit.bintray") {
         bintray {
             pkg {
-                user = 'basilbrunner'
+                user = 'burrunan'
                 repo = 'maven'
 
-                userOrg = 'basilbrunner'
-                name = 'ch.myniva.s3-build-cache'
+                userOrg = 'burrunan'
+                name = 'com.github.burrunan.s3-build-cache'
                 licenses = ['Apache-2.0']
                 labels = ['gradle', 'build-cache']
                 publish = true

@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package ch.myniva.gradle.caching.s3
+package com.github.burrunan.s3cache
 
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.io.TempDir
@@ -44,7 +44,7 @@ abstract class BaseGradleTest {
                   }
                 }
 
-                apply plugin: 'ch.myniva.s3-build-cache'
+                apply plugin: 'com.github.burrunan.s3-build-cache'
 
                 $extra
             """

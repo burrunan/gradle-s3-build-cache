@@ -1,8 +1,8 @@
 # AWS S3 Gradle build cache
 
 [![Apache License 2.0](https://img.shields.io/badge/License-Apache%20License%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
-[![GitHub version](https://badge.fury.io/gh/myniva%2Fgradle-s3-build-cache.svg)](https://badge.fury.io/gh/myniva%2Fgradle-s3-build-cache)
-[![Build status](https://api.travis-ci.org/myniva/gradle-s3-build-cache.svg?branch=develop)](https://travis-ci.org/myniva/gradle-s3-build-cache)
+[![GitHub version](https://badge.fury.io/gh/burrunan%2Fgradle-s3-build-cache.svg)](https://badge.fury.io/gh/burrunan%2Fgradle-s3-build-cache)
+[![Build status](https://api.travis-ci.org/burrunan/gradle-s3-build-cache.svg?branch=develop)](https://travis-ci.org/burrunan/gradle-s3-build-cache)
 
 This is a custom Gradle [build cache](https://docs.gradle.org/current/userguide/build_cache.html)
 implementation which uses [AWS S3](https://aws.amazon.com/s3/) to store the cache objects.
@@ -16,25 +16,18 @@ implementation which uses [AWS S3](https://aws.amazon.com/s3/) to store the cach
 ## Use in your project
 
 Please note that this plugin is not yet ready for production. Feedback though is very welcome.
-Please open an [issue](https://github.com/myniva/gradle-s3-build-cache/issues) if you find a bug or 
+Please open an [issue](https://github.com/burrunan/gradle-s3-build-cache/issues) if you find a bug or 
 have an idea for an improvement.
 
 
 ### Apply plugin
 
 The Gradle build cache needs to be configured on the Settings level. As a first step, add a
-dependency to the plugin to your `settings.gradle` file. Get the latest version from [Gradle plugin portal](https://plugins.gradle.org/plugin/ch.myniva.s3-build-cache).
+dependency to the plugin to your `settings.gradle` file. Get the latest version from [Gradle plugin portal](https://plugins.gradle.org/plugin/com.github.burrunan.s3-build-cache).
 
 ```
-buildscript {
-  repositories {
-    maven {
-      url "https://plugins.gradle.org/m2/"
-    }
-  }
-  dependencies {
-    classpath "gradle.plugin.ch.myniva.gradle:s3-build-cache:<version>"
-  }
+plugins {
+  id("com.github.burrunan.s3-build-cache") version "1.0.0"
 }
 ```
 
@@ -66,7 +59,7 @@ Groovy DSL
 ```gradle
 // This goes to settings.gradle
 
-apply plugin: 'ch.myniva.s3-build-cache'
+apply plugin: 'com.github.burrunan.s3-build-cache'
 
 ext.isCiServer = System.getenv().containsKey("CI")
 
@@ -74,7 +67,7 @@ buildCache {
     local {
         enabled = !isCiServer
     }
-    remote(ch.myniva.gradle.caching.s3.AwsS3BuildCache) {
+    remote(com.github.burrunan.s3cache.AwsS3BuildCache) {
         region = 'eu-west-1'
         bucket = 'your-bucket'
         path = 'build-cache'
@@ -89,7 +82,7 @@ Kotlin DSL:
 // This goes to settings.gradle.kts
 
 plugins {
-    id("ch.myniva.s3-build-cache") version "0.10.0"
+    id("com.github.burrunan.s3-build-cache") version "1.0.0"
 }
 
 val isCiServer = System.getenv().containsKey("CI")
@@ -98,7 +91,7 @@ buildCache {
     local {
         enabled = !isCiServer
     }
-    remote<ch.myniva.gradle.caching.s3.AwsS3BuildCache> {
+    remote<com.github.burrunan.s3cache.AwsS3BuildCache> {
         region = "eu-west-1"
         bucket = "your-bucket"
         path = "build-cache"

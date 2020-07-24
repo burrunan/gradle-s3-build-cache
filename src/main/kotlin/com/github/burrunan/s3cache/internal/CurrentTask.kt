@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package ch.myniva.gradle.caching.s3.internal
+package com.github.burrunan.s3cache.internal
 
 class TaskPerformanceInfo(
     val path: String,
