@@ -126,7 +126,7 @@ class AwsS3BuildCacheService internal constructor(
                 if (contentLength > maximumCachedObjectLength) {
                     logger.info(
                         "Cache item '{}' '{}' in S3 bucket size is {}, and it exceeds maximumCachedObjectLength {}. Will skip the retrieval",
-                        key.displayName,
+                        key,
                         bucketPath,
                         contentLength,
                         maximumCachedObjectLength
@@ -150,14 +150,14 @@ class AwsS3BuildCacheService internal constructor(
                         403 -> "Got 403 (Forbidden) when fetching cache item '{}' '{}' in S3 bucket"
                         else -> "Did not find cache item '{}' '{}' in S3 bucket"
                     },
-                    key.displayName,
+                    key,
                     bucketPath
                 )
                 return false
             }
             logger.info(
                 "Unexpected error when fetching cache item '{}' '{}' in S3 bucket",
-                key.displayName,
+                key,
                 bucketPath,
                 e
             )
@@ -175,7 +175,7 @@ class AwsS3BuildCacheService internal constructor(
         if (itemSize > maximumCachedObjectLength) {
             logger.info(
                 "Cache item '{}' '{}' in S3 bucket size is {}, and it exceeds maximumCachedObjectLength {}. Will skip caching it.",
-                key.displayName,
+                key,
                 bucketPath,
                 itemSize,
                 maximumCachedObjectLength

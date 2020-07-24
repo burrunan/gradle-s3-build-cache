@@ -10,8 +10,7 @@ implementation which uses [AWS S3](https://aws.amazon.com/s3/) to store the cach
 
 ## Compatibility
 
-* Version >= 0.3.0 - Gradle 4.x
-* Version < 0.3.0 - Gradle 3.5
+* Version 1.0.0 - Gradle 4.1+
 
 ## Use in your project
 
