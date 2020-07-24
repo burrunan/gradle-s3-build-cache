@@ -199,12 +199,18 @@ class AwsS3BuildCacheService internal constructor(
         }
         metadata?.appendTo(meta.userMetadata)
         try {
-            val stream = ByteArrayInputStream(
-                ByteArrayOutputStream()
-                    .also { os -> writer.writeTo(os) }
-                    .toByteArray()
+            val request = writer.file()?.let {
+                // If file is avaliable, use it directly
+                PutObjectRequest(bucketName, bucketPath, it)
+            } ?: PutObjectRequest(
+                bucketName, bucketPath,
+                ByteArrayInputStream(
+                    ByteArrayOutputStream()
+                        .also { os -> writer.writeTo(os) }
+                        .toByteArray()
+                ), meta
             )
-            val request = PutObjectRequest(bucketName, bucketPath, stream, meta)
+            request.metadata = meta
             if (reducedRedundancy) {
                 request.withStorageClass(StorageClass.ReducedRedundancy)
             }
