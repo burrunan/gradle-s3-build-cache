@@ -47,14 +47,10 @@ fun CacheEntryMetadata(map: Map<String, String>) = CacheEntryMetadata(
     gradleVersion = map["gradleVersion"]
 )
 
-fun BuildCacheEntryWriter.readBuildMetadata(): CacheEntryMetadata? {
-    try {
-        val file =
-            this::class.java.getDeclaredField("file").get(this) as? File ?: return null
-        return file.readBuildMetadata()
-    } catch (ignore: Throwable) {
-    }
-    return null
+fun BuildCacheEntryWriter.readBuildMetadata(): CacheEntryMetadata? = try {
+    file()?.readBuildMetadata()
+} catch (ignore: Throwable) {
+    null
 }
 
 fun File.readBuildMetadata(): CacheEntryMetadata? {
