@@ -40,14 +40,14 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
             describe("Region", config.region)
             describe("Bucket", config.bucket)
             describe("Reduced Redundancy", config.isReducedRedundancy)
-            describe("Path", config.path)
+            describe("Prefix", config.prefix)
             describe("Endpoint", config.endpoint)
         }
         verifyConfig(config)
         return AwsS3BuildCacheService(
             createS3Client(config),
             config.bucket!!,
-            config.path,
+            config.prefix,
             config.isReducedRedundancy,
             config.maximumCachedObjectLength,
             config.showStatistics

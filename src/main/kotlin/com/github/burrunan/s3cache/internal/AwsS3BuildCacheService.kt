@@ -34,7 +34,7 @@ private val logger = Logging.getLogger(AwsS3BuildCacheService::class.java)
 class AwsS3BuildCacheService internal constructor(
     private val s3: AmazonS3,
     private val bucketName: String,
-    private val path: String?,
+    private val prefix: String?,
     private val reducedRedundancy: Boolean,
     private val maximumCachedObjectLength: Long,
     private val showStatistics: Boolean
@@ -97,10 +97,10 @@ class AwsS3BuildCacheService internal constructor(
         }
     }
 
-    private fun BuildCacheKey.getBucketPath() = if (path.isNullOrEmpty()) {
+    private fun BuildCacheKey.getBucketPath() = if (prefix.isNullOrEmpty()) {
         hashCode
     } else {
-        "$path/$hashCode"
+        "$prefix$hashCode"
     }
 
     override fun load(key: BuildCacheKey, reader: BuildCacheEntryReader): Boolean {
