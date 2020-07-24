@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package ch.myniva.gradle.caching.s3
+package com.github.burrunan.s3cache
 
 import com.adobe.testing.s3mock.junit5.S3MockExtension
 

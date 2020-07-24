@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.myniva.gradle.caching.s3.internal
+package com.github.burrunan.s3cache.internal
 
-import ch.myniva.gradle.caching.s3.AwsS3BuildCache
+import com.github.burrunan.s3cache.AwsS3BuildCache
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.AnonymousAWSCredentials

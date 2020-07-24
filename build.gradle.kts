@@ -15,7 +15,7 @@ repositories {
     jcenter()
 }
 
-group = "ch.myniva.gradle"
+group = "com.github.burrunan.s3cache"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_7
@@ -52,21 +52,21 @@ dependencies {
 gradlePlugin {
     plugins {
         create("s3BuildCache") {
-            id = "ch.myniva.s3-build-cache"
-            implementationClass = "ch.myniva.gradle.caching.s3.AwsS3Plugin"
+            id = "com.github.burrunan.s3-build-cache"
+            implementationClass = "com.github.burrunan.s3cache.AwsS3Plugin"
         }
     }
 }
 
 pluginBundle {
-    website = "https://github.com/myniva/gradle-s3-build-cache"
-    vcsUrl = "https://github.com/myniva/gradle-s3-build-cache"
+    website = "https://github.com/burrunan/gradle-s3-build-cache"
+    vcsUrl = "https://github.com/burrunan/gradle-s3-build-cache"
     description = "An AWS S3 build cache implementation"
-    tags = listOf("build-cache")
+    tags = listOf("build-cache", "s3")
 
     plugins {
         named("s3BuildCache") {
-            id = "ch.myniva.s3-build-cache"
+            id = "com.github.burrunan.s3-build-cache"
             displayName = "AWS S3 build cache"
         }
     }

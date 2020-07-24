@@ -14,9 +14,9 @@
  * limitations under the License.
  *
  */
-package ch.myniva.gradle.caching.s3
+package com.github.burrunan.s3cache
 
-import ch.myniva.gradle.caching.s3.internal.readBuildMetadata
+import com.github.burrunan.s3cache.internal.readBuildMetadata
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

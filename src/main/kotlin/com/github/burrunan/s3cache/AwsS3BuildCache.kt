@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.myniva.gradle.caching.s3
+package com.github.burrunan.s3cache
 
 import org.gradle.caching.configuration.AbstractBuildCache
 

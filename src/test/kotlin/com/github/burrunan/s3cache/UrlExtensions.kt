@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package ch.myniva.gradle.caching.s3
+package com.github.burrunan.s3cache
 
 import java.io.File
 import java.net.URISyntaxException

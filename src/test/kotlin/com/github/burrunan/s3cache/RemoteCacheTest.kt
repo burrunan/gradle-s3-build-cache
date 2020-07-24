@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package ch.myniva.gradle.caching.s3
+package com.github.burrunan.s3cache
 
 import com.adobe.testing.s3mock.S3MockApplication
 import com.amazonaws.services.s3.AmazonS3
@@ -111,7 +111,7 @@ class RemoteCacheTest: BaseGradleTest() {
                     // Only remote cache should be used
                     enabled = false
                 }
-                remote(ch.myniva.gradle.caching.s3.AwsS3BuildCache) {
+                remote(com.github.burrunan.s3cache.AwsS3BuildCache) {
                     region = 'eu-west-1'
                     bucket = '$BUCKET_NAME'
                     path = 'build-cache'
