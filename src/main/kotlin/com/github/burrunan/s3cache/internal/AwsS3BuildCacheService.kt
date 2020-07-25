@@ -115,7 +115,7 @@ class AwsS3BuildCacheService internal constructor(
                         (if (cacheLoads.starts != cacheHits.starts) ", reads: ${cacheLoads.starts}" else "") +
                         (if (cacheHits.starts != 0) ", hits: ${cacheHits.starts}" else "") +
                         (if (cacheLoads.elapsed != 0L) ", elapsed: ${cacheLoads.elapsed.timeUnits()}" else "") +
-                        (if (cacheLoads.bytes != 0L) ", processed: ${cacheLoads.bytes.byteUnits()}" else "")
+                        (if (cacheLoads.bytes != 0L) ", received: ${cacheLoads.bytes.byteUnits()}" else "")
             )
         }
         if (cacheStores.starts != 0) {
