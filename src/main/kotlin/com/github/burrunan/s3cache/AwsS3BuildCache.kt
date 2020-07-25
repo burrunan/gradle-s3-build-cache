@@ -30,4 +30,8 @@ open class AwsS3BuildCache : AbstractBuildCache() {
     var sessionToken: String? = System.getenv("S3_BUILD_CACHE_SESSION_TOKEN")
     var lookupDefaultAwsCredentials: Boolean = false
     var showStatistics: Boolean = true
+    var showStatisticsWhenImpactExceeds: Long = 100
+    var showStatisticsWhenSavingsExceeds: Long = 100
+    var showStatisticsWhenWasteExceeds: Long = 100
+    var showStatisticsWhenTransferExceeds: Long = 10 * 1024 * 1024
 }

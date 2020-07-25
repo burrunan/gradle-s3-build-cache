@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.*
+import kotlin.math.absoluteValue
 
 private val logger = Logging.getLogger(AwsS3BuildCacheService::class.java)
 
@@ -37,7 +38,11 @@ class AwsS3BuildCacheService internal constructor(
     private val prefix: String?,
     private val reducedRedundancy: Boolean,
     private val maximumCachedObjectLength: Long,
-    private val showStatistics: Boolean
+    private val showStatistics: Boolean,
+    private val showStatisticsWhenImpactExceeds: Long,
+    private val showStatisticsWhenSavingsExceeds: Long,
+    private val showStatisticsWhenWasteExceeds: Long,
+    private val showStatisticsWhenTransferExceeds: Long
 ) : BuildCacheService {
     companion object {
         private const val BUILD_CACHE_CONTENT_TYPE = "application/vnd.gradle.build-cache-artifact"
@@ -75,6 +80,12 @@ class AwsS3BuildCacheService internal constructor(
             }
         }
 
+        fun Long.savedWasted(noImpact: String = "no impact") = when {
+            this > 0 -> "${timeUnits()} saved"
+            this < 0 -> "${(-this).timeUnits()} wasted"
+            else -> noImpact
+        }
+
         s3.shutdown()
 
         if (!showStatistics) {
@@ -82,11 +93,29 @@ class AwsS3BuildCacheService internal constructor(
         }
 
         if (cacheLoads.starts != 0) {
+            val impact = cacheLoadSavings.elapsed - cacheLoadWaste.elapsed
+            val summary = when {
+                cacheLoadSavings.elapsed == 0L && cacheLoadWaste.elapsed == 0L ->
+                    "no impact"
+                cacheLoadWaste.elapsed == 0L ->
+                    "${cacheLoadSavings.elapsed.savedWasted()} on hits"
+                cacheLoadSavings.elapsed == 0L ->
+                    "${(-cacheLoadWaste.elapsed).savedWasted()} on misses"
+                else ->
+                    "${impact.savedWasted()} (${cacheLoadSavings.elapsed.savedWasted()} on hits, " +
+                            "${(-cacheLoadWaste.elapsed).savedWasted()} on misses)"
+            }
             logger.log(
-                if (cacheHits.elapsed > 1000) LogLevel.LIFECYCLE else LogLevel.INFO,
-                "S3 cache saved: ${cacheLoadSavings.elapsed.timeUnits()}, wasted: ${cacheLoadWaste.elapsed.timeUnits()}, " +
-                        "reads: ${cacheLoads.starts}, hits: ${cacheHits.starts}, " +
-                        "elapsed: ${cacheLoads.elapsed.timeUnits()}, processed: ${cacheLoads.bytes.byteUnits()}"
+                if (impact.absoluteValue > showStatisticsWhenImpactExceeds ||
+                    cacheLoadSavings.elapsed.absoluteValue > showStatisticsWhenSavingsExceeds ||
+                    cacheLoadWaste.elapsed.absoluteValue > showStatisticsWhenWasteExceeds ||
+                    cacheLoads.bytes > showStatisticsWhenTransferExceeds
+                ) LogLevel.LIFECYCLE else LogLevel.INFO,
+                "S3 cache $summary" +
+                        (if (cacheLoads.starts != cacheHits.starts) ", reads: ${cacheLoads.starts}" else "") +
+                        (if (cacheHits.starts != 0) ", hits: ${cacheHits.starts}" else "") +
+                        (if (cacheLoads.elapsed != 0L) ", elapsed: ${cacheLoads.elapsed.timeUnits()}" else "") +
+                        (if (cacheLoads.bytes != 0L) ", processed: ${cacheLoads.bytes.byteUnits()}" else "")
             )
         }
         if (cacheStores.starts != 0) {

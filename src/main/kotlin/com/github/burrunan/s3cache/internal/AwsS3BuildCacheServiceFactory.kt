@@ -50,7 +50,11 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
             config.prefix,
             config.isReducedRedundancy,
             config.maximumCachedObjectLength,
-            config.showStatistics
+            config.showStatistics,
+            config.showStatisticsWhenImpactExceeds,
+            config.showStatisticsWhenSavingsExceeds,
+            config.showStatisticsWhenWasteExceeds,
+            config.showStatisticsWhenTransferExceeds
         )
     }
 

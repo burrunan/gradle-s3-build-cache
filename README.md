@@ -60,6 +60,10 @@ The AWS S3 build cache implementation has a few configuration options:
 | `sessionToken` | The AWS sessionToken when you use temporal credentials | no | `getenv("S3_BUILD_CACHE_SESSION_TOKEN")` |
 | `lookupDefaultAwsCredentials` | Configures if `DefaultAWSCredentialsProviderChain` could be used to lookup credentials | yes | false | 
 | `showStatistics` | Displays statistics on the remote cache performance | Yes | `true` |
+| `showStatisticsWhenImpactExceeds` | Specifies minimum duration to trigger printing the stats, milliseconds | Yes | `100` |
+| `showStatisticsWhenSavingsExceeds` | Specifies minimum duration to trigger printing the stats, milliseconds | Yes | `100` |
+| `showStatisticsWhenWasteExceeds` | Specifies minimum duration to trigger printing the stats, milliseconds | Yes | `100` |
+| `showStatisticsWhenTransferExceeds` | Specifies minimum transfer size to trigger printing the stats, bytes | Yes | 10*1024*1024 |
 
 Note: if both `awsAccessKeyId` and `awsSecretKey` are `nullOrBlank` (`null` or whitespace only), then anonymous credentials are used.
 
@@ -188,17 +192,19 @@ The plugin prints cache statistics at the end of the build (you can disable it w
 ```
 BUILD SUCCESSFUL in 6s
 1 actionable task: 1 executed
-S3 cache saved: 0ms, wasted: 233ms, reads: 1, hits: 0, elapsed: 233ms, processed: 0 B
+S3 cache 232ms saved (242ms saved on hits, 10ms wasted on misses), reads: 2, hits: 1, elapsed: 91ms, processed: 477 B
 S3 cache writes: 1, elapsed: 121ms, sent to cache: 472 B
 ```
 
 S3 reads:
-* `saved: 0ms` – the estimated time saved by the remote build cache (`original_task_elapsed_time - from_cache_task_elapsed_time`).
-Note: this estimation does not account for parallel task execution. Negative estimation means it is
-probably faster to build task from scratch rather than download the cached results.
-* `wasted: 233ms` – the amount of time spent for `cache misses`
-* `reads: 1` – number load requests to the remote cache
-* `hits: 0` – number items loaded from the remote cache
+* `saved: 232ms` – overall estimation of the remote cache impact on the build time 
+Note: this estimation does not account for parallel task execution.
+* `242ms saved on hits` – the estimated time saved by the remote build cache (`original_task_elapsed_time - from_cache_task_elapsed_time`).
+Note: this estimation does not account for parallel task execution. `saved on hits` means the cache helps,
+and `wasted on hits` means the estimated execution time would be less than the cache load time.
+* `10ms wasted on misses` – the amount of time spent for `cache misses`
+* `reads: 2` – number load requests to the remote cache
+* `hits: 1` – number items loaded from the remote cache
 * `elapsed: 233ms` – total time spent on loading items from remote cache
 * `processed: 0 B` – number of bytes loaded from the remote cache
 

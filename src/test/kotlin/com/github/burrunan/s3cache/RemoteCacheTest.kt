@@ -134,6 +134,10 @@ class RemoteCacheTest: BaseGradleTest() {
               outputFile = file("$outputFile")
               property("hello", "world")
             }
+            tasks.create('props2', WriteProperties) {
+              outputFile = file("${outputFile}2")
+              property("hello", "world2")
+            }
         """.trimIndent()
         )
         val result = prepare(gradleVersion, "props", "-i").build()
@@ -145,7 +149,7 @@ class RemoteCacheTest: BaseGradleTest() {
         }
         // Delete output to force task re-execution
         projectDir.resolve(outputFile).toFile().delete()
-        val result2 = prepare(gradleVersion, "props", "-i").build()
+        val result2 = prepare(gradleVersion, "props", "props2", "-i").build()
         if (isCI) {
             println(result2.output)
         }

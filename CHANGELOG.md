@@ -1,3 +1,9 @@
+#### 1.1
+ - 2020-07-24
+
+##### Added
+ - Improved cache statistics output, added configuration properties `showStatisticsWhenImpactExceeds`, `showStatisticsWhenSavingsExceeds`, `showStatisticsWhenWasteExceeds`, `showStatisticsWhenTransferExceeds` 
+
 #### 1.0.0
  - 2020-07-24 - [26 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v0.10.0...v1.0.0) by [Vladimir Sitnikov](https://github.com/vlsi)
  - This plugin is a fork of [myniva/gradle-s3-build-cache](https://github.com/myniva/gradle-s3-build-cache).
