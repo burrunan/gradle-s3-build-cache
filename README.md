@@ -7,6 +7,18 @@
 This is a custom Gradle [build cache](https://docs.gradle.org/current/userguide/build_cache.html)
 implementation which uses [AWS S3](https://aws.amazon.com/s3/) to store the cache objects.
 
+This plugin is a fork of [myniva/gradle-s3-build-cache](https://github.com/myniva/gradle-s3-build-cache).
+ [Burrunan](https://en.wikipedia.org/wiki/Burrunan_dolphin) adds lots of performance, functional, and security features.
+See [v1.0.0 release notes](CHANGELOG.md)
+
+Key improvements are (as of 2020-07-24):
+- Improved security: the plugin requires only `GetObject` permission, and it does not need `ListObjects`
+- Improved security: the plugin uses its own configuration properties rather than default AWS credentials by default
+- Faster cache population: cache entries are sent as `File` objects rather than buffering to memory
+- Faster cache retrieval: cache lookup performs one network request rather than two
+- `maximumCachedObjectLength` property to avoid unexpectedly large remote cache transfers
+- Elaborate details on cache performance
+- Cached items contain metadata (elapsed duration, task name, Gradle version) which help to analyze the cache contents
 
 ## Compatibility
 
@@ -64,13 +76,17 @@ ext.isCiServer = System.getenv().containsKey("CI")
 
 buildCache {
     local {
-        enabled = !isCiServer
+        // Local build cache is dangerous as it might produce inconsistent results
+        // in case developer modifies files while the build is running
+        enabled = false
     }
     remote(com.github.burrunan.s3cache.AwsS3BuildCache) {
         region = 'eu-west-1'
         bucket = 'your-bucket'
         prefix = 'cache/'
         push = isCiServer
+        // Credentials will be taken from  S3_BUILD_CACHE_... environment variables
+        // anonymous access will be used if environment variables are missing
     }
 }
 ```
@@ -88,7 +104,9 @@ val isCiServer = System.getenv().containsKey("CI")
 
 buildCache {
     local {
-        enabled = !isCiServer
+        // Local build cache is dangerous as it might produce inconsistent results
+        // in case developer modifies files while the build is running
+        enabled = false
     }
     remote<com.github.burrunan.s3cache.AwsS3BuildCache> {
         region = "eu-west-1"
