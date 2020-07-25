@@ -1,5 +1,5 @@
 #### 1.1
- - 2020-07-24
+ - 2020-07-24 - [4 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.0.0...v1.1)
 
 ##### Added
  - Improved cache statistics output, added configuration properties `showStatisticsWhenImpactExceeds`, `showStatisticsWhenSavingsExceeds`, `showStatisticsWhenWasteExceeds`, `showStatisticsWhenTransferExceeds` 

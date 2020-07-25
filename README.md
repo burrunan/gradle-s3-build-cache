@@ -1,6 +1,5 @@
 # AWS S3 Gradle build cache
 
-
 [![Gradle plugin](https://img.shields.io/badge/plugins.gradle.org-com.github.burrunan.s3-build-cache-blue.svg)](https://plugins.gradle.org/plugin/com.github.burrunan.s3-build-cache)
 [![CI Status](https://github.com/burrunan/gradle-s3-build-cache/workflows/CI/badge.svg)](https://github.com/burrunan/gradle-s3-build-cache/actions)
 
@@ -38,7 +37,7 @@ dependency to the plugin to your `settings.gradle` file. Get the latest version 
 
 ```
 plugins {
-  id("com.github.burrunan.s3-build-cache") version "1.0.0"
+  id("com.github.burrunan.s3-build-cache") version "1.1"
 }
 ```
 
@@ -101,7 +100,7 @@ Kotlin DSL:
 // This goes to settings.gradle.kts
 
 plugins {
-    id("com.github.burrunan.s3-build-cache") version "1.0.0"
+    id("com.github.burrunan.s3-build-cache") version "1.1"
 }
 
 val isCiServer = System.getenv().containsKey("CI")
