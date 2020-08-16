@@ -15,25 +15,25 @@
  */
 package com.github.burrunan.s3cache.internal
 
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.AmazonS3Exception
-import com.amazonaws.services.s3.model.ObjectMetadata
-import com.amazonaws.services.s3.model.PutObjectRequest
-import com.amazonaws.services.s3.model.StorageClass
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logging
 import org.gradle.caching.*
 import org.gradle.util.GradleVersion
-import java.io.ByteArrayInputStream
+import software.amazon.awssdk.core.ResponseBytes
+import software.amazon.awssdk.core.async.AsyncRequestBody
+import software.amazon.awssdk.core.async.AsyncResponseTransformer
+import software.amazon.awssdk.core.exception.SdkServiceException
+import software.amazon.awssdk.services.s3.S3AsyncClient
+import software.amazon.awssdk.services.s3.model.*
 import java.io.ByteArrayOutputStream
-import java.io.IOException
 import java.util.*
+import java.util.concurrent.CompletionException
 import kotlin.math.absoluteValue
 
 private val logger = Logging.getLogger(AwsS3BuildCacheService::class.java)
 
 class AwsS3BuildCacheService internal constructor(
-    private val s3: AmazonS3,
+    private val s3: S3AsyncClient,
     private val bucketName: String,
     private val prefix: String?,
     private val reducedRedundancy: Boolean,
@@ -86,7 +86,7 @@ class AwsS3BuildCacheService internal constructor(
             else -> noImpact
         }
 
-        s3.shutdown()
+        s3.close()
 
         if (!showStatistics) {
             return
@@ -148,50 +148,72 @@ class AwsS3BuildCacheService internal constructor(
 
     private fun Stopwatch.loadInternal(key: BuildCacheKey, reader: BuildCacheEntryReader): Boolean {
         val bucketPath = key.getBucketPath()
+        logger.info("Loading cache entry '{}' from S3 bucket", bucketPath)
+        val s3Object: ResponseBytes<GetObjectResponse>
         try {
-            logger.info("Loading cache entry '{}' from S3 bucket", bucketPath)
-            s3.getObject(bucketName, bucketPath).use { s3Object ->
-                val contentLength = s3Object.objectMetadata.contentLength
-                if (contentLength > maximumCachedObjectLength) {
+            s3Object = s3.getObject(GetObjectRequest.builder().bucket(bucketName).key(bucketPath).build(), AsyncResponseTransformer.toBytes())
+                    .join()
+        } catch (e : CompletionException) {
+            val cause = e.cause
+            when (cause) {
+                is NoSuchBucketException -> {
+                    logger.info("Bucket '{}' not found", bucketName, cause)
+                }
+                is NoSuchKeyException -> {
                     logger.info(
-                        "Cache item '{}' '{}' in S3 bucket size is {}, and it exceeds maximumCachedObjectLength {}. Will skip the retrieval",
-                        key,
-                        bucketPath,
-                        contentLength,
-                        maximumCachedObjectLength
+                            "Did not find cache item '{}' '{}' in S3 bucket '{}'",
+                            key,
+                            bucketPath,
+                            bucketName
                     )
-                    return false
                 }
-                // Propagate metadata so task finished listener can compute time saved/wasted
-                CURRENT_TASK.get()?.let {
-                    it.metadata = CacheEntryMetadata(s3Object.objectMetadata.userMetadata)
+                is SdkServiceException -> {
+                    if (cause.statusCode() == 403) {
+                        logger.info(
+                                "Got 403 (Forbidden) when fetching cache item '{}' '{}' in S3 bucket",
+                                key,
+                                bucketPath
+                        )
+                    } else {
+                        logger.info(
+                                "Unexpected error when fetching cache item '{}' '{}' in S3 bucket",
+                                key,
+                                bucketPath,
+                                cause
+                        )
+                    }
                 }
-                bytesProcessed(contentLength)
-                cacheHits {
-                    reader.readFrom(s3Object.objectContent)
+                else -> {
+                    logger.info(
+                            "Unexpected error when fetching cache item '{}' '{}' in S3 bucket",
+                            key,
+                            bucketPath,
+                            cause
+                    )
                 }
             }
-            return true
-        } catch (e: AmazonS3Exception) {
-            if (e.statusCode == 403 || e.statusCode == 404) {
-                logger.info(
-                    when (e.statusCode) {
-                        403 -> "Got 403 (Forbidden) when fetching cache item '{}' '{}' in S3 bucket"
-                        else -> "Did not find cache item '{}' '{}' in S3 bucket"
-                    },
-                    key,
-                    bucketPath
-                )
-                return false
-            }
-            logger.info(
-                "Unexpected error when fetching cache item '{}' '{}' in S3 bucket",
-                key,
-                bucketPath,
-                e
-            )
-            return false;
+            return false
         }
+        val contentLength = s3Object.response().contentLength()
+        if (contentLength > maximumCachedObjectLength) {
+            logger.info(
+                    "Cache item '{}' '{}' in S3 bucket size is {}, and it exceeds maximumCachedObjectLength {}. Will skip the retrieval",
+                    key,
+                    bucketPath,
+                    contentLength,
+                    maximumCachedObjectLength
+            )
+            return false
+        }
+        // Propagate metadata so task finished listener can compute time saved/wasted
+        CURRENT_TASK.get()?.let {
+            it.metadata = CacheEntryMetadata(s3Object.response().metadata())
+        }
+        bytesProcessed(contentLength)
+        cacheHits {
+            reader.readFrom(s3Object.asInputStream())
+        }
+        return true
     }
 
     override fun store(key: BuildCacheKey, writer: BuildCacheEntryWriter) = cacheStores {
@@ -213,10 +235,6 @@ class AwsS3BuildCacheService internal constructor(
         }
         bytesProcessed(itemSize)
         logger.info("Storing cache entry '{}' to S3 bucket", bucketPath)
-        val meta = ObjectMetadata().apply {
-            contentType = BUILD_CACHE_CONTENT_TYPE
-            contentLength = writer.size
-        }
         val metadata = writer.readBuildMetadata() ?: CURRENT_TASK.get()?.let {
             CacheEntryMetadata(
                 buildInvocationId = buildId,
@@ -226,25 +244,30 @@ class AwsS3BuildCacheService internal constructor(
                 gradleVersion = GradleVersion.current().toString()
             )
         }
-        metadata?.appendTo(meta.userMetadata)
+        val userMetadata = hashMapOf<String, String>()
+        metadata?.appendTo(userMetadata)
         try {
-            val request = writer.file()?.let {
-                // If file is avaliable, use it directly
-                PutObjectRequest(bucketName, bucketPath, it)
-            } ?: PutObjectRequest(
-                bucketName, bucketPath,
-                ByteArrayInputStream(
-                    ByteArrayOutputStream()
-                        .also { os -> writer.writeTo(os) }
-                        .toByteArray()
-                ), meta
-            )
-            request.metadata = meta
-            if (reducedRedundancy) {
-                request.withStorageClass(StorageClass.ReducedRedundancy)
+            val request = PutObjectRequest.builder().run {
+                bucket(bucketName)
+                key(bucketPath)
+                contentLength(writer.size)
+                contentType(BUILD_CACHE_CONTENT_TYPE)
+                metadata(userMetadata)
+                if (reducedRedundancy) {
+                    storageClass(StorageClass.REDUCED_REDUNDANCY)
+                }
+                build()
             }
-            s3.putObject(request)
-        } catch (e: IOException) {
+            if (writer.file() != null) {
+                s3.putObject(request, AsyncRequestBody.fromFile(writer.file())).join()
+            } else {
+                s3.putObject(request, AsyncRequestBody.fromBytes(
+                        ByteArrayOutputStream()
+                                .also { os -> writer.writeTo(os) }
+                                .toByteArray()
+                )).join()
+            }
+        } catch (e: Throwable) {
             throw BuildCacheException("Error while storing cache object in S3 bucket", e)
         }
     }

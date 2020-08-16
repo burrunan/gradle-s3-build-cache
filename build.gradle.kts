@@ -58,12 +58,13 @@ kotlinDslPluginOptions {
 }
 
 dependencies {
-    implementation("com.amazonaws:aws-java-sdk-s3:1.11.751")
+    implementation(platform("software.amazon.awssdk:bom:2.13.76"))
+    implementation("software.amazon.awssdk:s3")
 
     testImplementation(platform("org.junit:junit-bom:5.7.0-M1"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
-    testImplementation("com.adobe.testing:s3mock-junit5:2.1.22") {
+    testImplementation("com.adobe.testing:s3mock-junit5:2.1.24") {
         // Gradle has its own logging
         exclude("ch.qos.logback", "logback-classic")
         exclude("org.apache.logging.log4j", "log4j-to-slf4j")
