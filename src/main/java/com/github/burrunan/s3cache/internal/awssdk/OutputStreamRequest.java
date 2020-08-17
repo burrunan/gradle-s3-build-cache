@@ -11,7 +11,7 @@ import org.reactivestreams.Subscriber;
 
 import software.amazon.awssdk.core.async.AsyncRequestBody;
 
-public class OutputStreamRequest extends OutputStream implements AsyncRequestBody {
+public final class OutputStreamRequest extends OutputStream implements AsyncRequestBody {
 
     private final long contentLength;
     private final CountDownLatch subscribed;
