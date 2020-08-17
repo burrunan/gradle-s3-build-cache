@@ -16,7 +16,7 @@ public final class OutputStreamRequest extends OutputStream implements AsyncRequ
     private final long contentLength;
     private final CountDownLatch subscribed;
 
-    private volatile Subscriber<? super ByteBuffer> subscriber;
+    private Subscriber<? super ByteBuffer> subscriber;
 
     public OutputStreamRequest(long contentLength) {
         this.contentLength = contentLength;
