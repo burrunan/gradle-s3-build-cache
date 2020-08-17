@@ -58,13 +58,16 @@ kotlinDslPluginOptions {
 }
 
 dependencies {
+    implementation(platform("io.netty:netty-bom:4.1.46.Final"))
+    implementation("io.netty:netty-buffer")
+
     implementation(platform("software.amazon.awssdk:bom:2.13.76"))
     implementation("software.amazon.awssdk:s3")
 
     testImplementation(platform("org.junit:junit-bom:5.7.0-M1"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
-    testImplementation("com.adobe.testing:s3mock-junit5:2.1.24") {
+    testImplementation("com.adobe.testing:s3mock-junit5:2.1.22") {
         // Gradle has its own logging
         exclude("ch.qos.logback", "logback-classic")
         exclude("org.apache.logging.log4j", "log4j-to-slf4j")

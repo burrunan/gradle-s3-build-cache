@@ -15,6 +15,8 @@
  */
 package com.github.burrunan.s3cache.internal
 
+import com.github.burrunan.s3cache.internal.awssdk.InputStreamResponse
+import com.github.burrunan.s3cache.internal.awssdk.OutputStreamRequest
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logging
 import org.gradle.caching.*
@@ -149,15 +151,15 @@ class AwsS3BuildCacheService internal constructor(
     private fun Stopwatch.loadInternal(key: BuildCacheKey, reader: BuildCacheEntryReader): Boolean {
         val bucketPath = key.getBucketPath()
         logger.info("Loading cache entry '{}' from S3 bucket", bucketPath)
-        val s3Object: ResponseBytes<GetObjectResponse>
+        val s3Object: InputStreamResponse<GetObjectResponse>
         try {
-            s3Object = s3.getObject(GetObjectRequest.builder().bucket(bucketName).key(bucketPath).build(), AsyncResponseTransformer.toBytes())
+            s3Object = s3.getObject(GetObjectRequest.builder().bucket(bucketName).key(bucketPath).build(), InputStreamResponse())
                     .join()
         } catch (e : CompletionException) {
             val cause = e.cause
             when (cause) {
                 is NoSuchBucketException -> {
-                    logger.info("Bucket '{}' not found", bucketName, cause)
+                    throw BuildCacheException("Bucket '${bucketName}' not found", e)
                 }
                 is NoSuchKeyException -> {
                     logger.info(
@@ -203,6 +205,7 @@ class AwsS3BuildCacheService internal constructor(
                     contentLength,
                     maximumCachedObjectLength
             )
+            s3Object.close()
             return false
         }
         // Propagate metadata so task finished listener can compute time saved/wasted
@@ -210,8 +213,18 @@ class AwsS3BuildCacheService internal constructor(
             it.metadata = CacheEntryMetadata(s3Object.response().metadata())
         }
         bytesProcessed(contentLength)
-        cacheHits {
-            reader.readFrom(s3Object.asInputStream())
+        try {
+            cacheHits {
+                reader.readFrom(s3Object)
+            }
+        } catch (e: Throwable) {
+            logger.info(
+                    "Unexpected error when fetching cache item '{}' '{}' in S3 bucket",
+                    key,
+                    bucketPath,
+                    e
+            )
+            return false
         }
         return true
     }
@@ -261,11 +274,10 @@ class AwsS3BuildCacheService internal constructor(
             if (writer.file() != null) {
                 s3.putObject(request, AsyncRequestBody.fromFile(writer.file())).join()
             } else {
-                s3.putObject(request, AsyncRequestBody.fromBytes(
-                        ByteArrayOutputStream()
-                                .also { os -> writer.writeTo(os) }
-                                .toByteArray()
-                )).join()
+                val body = OutputStreamRequest(writer.size)
+                val future = s3.putObject(request, body)
+                writer.writeTo(body)
+                future.join()
             }
         } catch (e: Throwable) {
             throw BuildCacheException("Error while storing cache object in S3 bucket", e)
