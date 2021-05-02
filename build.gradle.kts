@@ -60,7 +60,7 @@ kotlinDslPluginOptions {
 dependencies {
     implementation("com.amazonaws:aws-java-sdk-s3:1.11.751")
 
-    testImplementation(platform("org.junit:junit-bom:5.7.0-M1"))
+    testImplementation(platform("org.junit:junit-bom:5.7.1"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testImplementation("com.adobe.testing:s3mock-junit5:2.1.22") {
@@ -228,7 +228,7 @@ allprojects {
                                 email.set("sitnikov.vladimir@gmail.com")
                             }
                         }
-//                        inceptionYear.set("2020")
+                        inceptionYear.set("2020")
                         url.set("https://github.com/burrunan/gradle-s3-build-cache")
                         licenses {
                             license {
