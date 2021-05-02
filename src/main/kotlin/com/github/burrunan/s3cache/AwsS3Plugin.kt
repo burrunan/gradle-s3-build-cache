@@ -18,6 +18,7 @@ package com.github.burrunan.s3cache
 import com.github.burrunan.s3cache.internal.AwsS3BuildCacheServiceFactory
 import com.github.burrunan.s3cache.internal.CURRENT_TASK
 import com.github.burrunan.s3cache.internal.TaskPerformanceInfo
+import org.gradle.StartParameter
 import org.gradle.api.Plugin
 import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionListener
@@ -34,6 +35,20 @@ class AwsS3Plugin : Plugin<Settings> {
             AwsS3BuildCache::class.java,
             AwsS3BuildCacheServiceFactory::class.java
         )
+        registerTaskExecutionListener(settings)
+    }
+
+    private val StartParameter.configurationCacheEnabled: Boolean
+        get() = try {
+            javaClass.getMethod("isConfigurationCache").invoke(this) as Boolean
+        } catch (e: Exception) {
+            false
+        }
+
+    private fun registerTaskExecutionListener(settings: Settings) {
+        if (settings.startParameter.configurationCacheEnabled) {
+            return
+        }
         settings.gradle.taskGraph.addTaskExecutionListener(object : TaskExecutionListener {
             override fun beforeExecute(task: Task) {
                 CURRENT_TASK.set(TaskPerformanceInfo(task.path, System.currentTimeMillis()))

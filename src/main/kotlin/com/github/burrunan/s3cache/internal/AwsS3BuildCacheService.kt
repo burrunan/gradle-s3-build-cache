@@ -33,7 +33,7 @@ import kotlin.math.absoluteValue
 private val logger = Logging.getLogger(AwsS3BuildCacheService::class.java)
 
 class AwsS3BuildCacheService internal constructor(
-    private val s3: AmazonS3,
+    s3Factory: () -> AmazonS3,
     private val bucketName: String,
     private val prefix: String?,
     private val reducedRedundancy: Boolean,
@@ -47,6 +47,9 @@ class AwsS3BuildCacheService internal constructor(
     companion object {
         private const val BUILD_CACHE_CONTENT_TYPE = "application/vnd.gradle.build-cache-artifact"
     }
+
+    // S3 client is created lazily, so it is created at execution time rather than configuration time
+    private val s3 by lazy(s3Factory)
 
     private val buildId = "%x".format(Random().nextLong())
 

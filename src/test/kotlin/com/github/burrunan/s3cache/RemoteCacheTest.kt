@@ -76,6 +76,7 @@ class RemoteCacheTest: BaseGradleTest() {
                 }
                 add(arguments("6.0"))
                 add(arguments("6.5"))
+                add(arguments("7.0"))
             }
         }
     }
@@ -99,6 +100,7 @@ class RemoteCacheTest: BaseGradleTest() {
             """
             org.gradle.caching=true
             org.gradle.caching.debug=true
+            org.gradle.unsafe.configuration-cache=true
             #systemProp.javax.net.debug=all
             systemProp.javax.net.ssl.trustStore=${keystore.absolutePath}
             systemProp.javax.net.ssl.trustStorePassword=password

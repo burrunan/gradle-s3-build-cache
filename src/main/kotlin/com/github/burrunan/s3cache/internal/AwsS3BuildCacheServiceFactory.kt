@@ -45,7 +45,7 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
         }
         verifyConfig(config)
         return AwsS3BuildCacheService(
-            createS3Client(config),
+            { createS3Client(config) },
             config.bucket!!,
             config.prefix,
             config.isReducedRedundancy,
