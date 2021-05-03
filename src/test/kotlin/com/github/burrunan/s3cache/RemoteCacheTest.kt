@@ -21,6 +21,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.DeleteObjectsRequest
 import org.gradle.api.JavaVersion
 import org.gradle.testkit.runner.TaskOutcome
+import org.gradle.util.GradleVersion
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -100,7 +101,7 @@ class RemoteCacheTest: BaseGradleTest() {
             """
             org.gradle.caching=true
             org.gradle.caching.debug=true
-            org.gradle.unsafe.configuration-cache=true
+
             #systemProp.javax.net.debug=all
             systemProp.javax.net.ssl.trustStore=${keystore.absolutePath}
             systemProp.javax.net.ssl.trustStorePassword=password
@@ -130,6 +131,7 @@ class RemoteCacheTest: BaseGradleTest() {
     @MethodSource("gradleVersionAndSettings")
     fun cacheStoreWorks(gradleVersion: String) {
         val outputFile = "build/out.txt"
+        enableConfigurationCache(gradleVersion)
         projectDir.resolve("build.gradle").write(
             """
             tasks.create('props', WriteProperties) {
@@ -157,6 +159,15 @@ class RemoteCacheTest: BaseGradleTest() {
         }
         assertEquals(TaskOutcome.FROM_CACHE, result2.task(":props")?.outcome) {
             "second execution => task should be resolved from cache"
+        }
+    }
+
+    private fun enableConfigurationCache(gradleVersion: String) {
+        if (GradleVersion.version(gradleVersion) >= GradleVersion.version("7.0")) {
+            // Gradle 6.5 expects values ON, OFF, WARN, so we add the option for 7.0 only
+            projectDir.resolve("gradle.properties").toFile().appendText(
+                "\norg.gradle.unsafe.configuration-cache=true\n"
+            )
         }
     }
 }
