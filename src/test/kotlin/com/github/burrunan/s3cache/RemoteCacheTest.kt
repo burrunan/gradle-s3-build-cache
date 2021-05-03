@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Vladimir Sitnikov <sitnikov.vladimir@gmail.com>
+ * Copyright 2020-2021 Vladimir Sitnikov <sitnikov.vladimir@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
 package com.github.burrunan.s3cache
 
 import com.adobe.testing.s3mock.S3MockApplication
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.DeleteObjectsRequest
 import org.gradle.api.JavaVersion
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GradleVersion
@@ -31,9 +29,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.ObjectIdentifier
 
 @Execution(ExecutionMode.SAME_THREAD)
-class RemoteCacheTest: BaseGradleTest() {
+class RemoteCacheTest : BaseGradleTest() {
     companion object {
         const val BUCKET_NAME = "test-bucket"
 
@@ -58,7 +58,7 @@ class RemoteCacheTest: BaseGradleTest() {
         @JvmStatic
         private fun gradleVersionAndSettings(): Iterable<Arguments> {
             if (!isCI) {
-                // Use the current Gradle version to make the test faster
+                // Use only the minimum supported Gradle version to make the test faster
                 return listOf(arguments("4.1"))
             }
             return mutableListOf<Arguments>().apply {
@@ -83,18 +83,19 @@ class RemoteCacheTest: BaseGradleTest() {
     }
 
     @BeforeEach
-    fun configureCache(mockApp: S3MockApplication, s3Client: AmazonS3) {
+    fun configureCache(mockApp: S3MockApplication, s3Client: S3Client) {
         val keystore = javaClass.classLoader.getResource("test_keystore.jks")!!.asFile
 
         // Make sure every test starts with an empty bucket
-        val objects = s3Client.listObjectsV2(BUCKET_NAME).objectSummaries
+        val objects = s3Client.listObjectsV2 {
+            it.bucket(BUCKET_NAME)
+        }.contents()
         if (objects.isNotEmpty()) {
-            s3Client.deleteObjects(
-                DeleteObjectsRequest(BUCKET_NAME)
-                    .withKeys(objects.map {
-                        DeleteObjectsRequest.KeyVersion(it.key)
-                    })
-            )
+            val ids = objects.map { ObjectIdentifier.builder().key(it.key()).build() }
+            s3Client.deleteObjects {
+                it.bucket(BUCKET_NAME)
+                it.delete { delete -> delete.objects(ids) }
+            }
         }
 
         projectDir.resolve("gradle.properties").write(

@@ -26,7 +26,7 @@ class MetadataReaderTest {
         val tgz =
             MetadataReaderTest::class.java.getResource("/8c6178372e88d2e7acca28f26b79ff37.tgz")
         assertEquals(
-            tgz.asFile.readBuildMetadata()?.appendTo(mutableMapOf()),
+            tgz.asFile.readBuildMetadata()?.toMap(),
             mapOf(
                 "buildInvocationId" to "m6e4sb4dmrc5zdnykb5v465pry",
                 "identity" to ":validatePlugins",

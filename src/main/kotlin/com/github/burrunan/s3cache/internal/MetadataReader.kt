@@ -30,7 +30,7 @@ class CacheEntryMetadata(
     val operatingSystem: String? = null,
     val gradleVersion: String? = null
 ) {
-    fun appendTo(map: MutableMap<String, String>) = map.apply {
+    fun toMap(): Map<String, String> = mutableMapOf<String, String>().apply {
         buildInvocationId?.let { put("buildInvocationId", it) }
         identity?.let { put("identity", it) }
         executionTime?.let { put("executionTime", it.toString()) }

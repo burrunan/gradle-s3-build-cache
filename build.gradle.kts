@@ -58,7 +58,11 @@ kotlinDslPluginOptions {
 }
 
 dependencies {
-    implementation("com.amazonaws:aws-java-sdk-s3:1.11.751")
+    implementation(platform("software.amazon.awssdk:bom:2.16.52"))
+    implementation("software.amazon.awssdk:s3") {
+        // We do not use netty client so far
+        exclude("software.amazon.awssdk", "netty-nio-client")
+    }
 
     testImplementation(platform("org.junit:junit-bom:5.7.1"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
