@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 the original author or authors.
+ * Copyright 2020-2021 Vladimir Sitnikov <sitnikov.vladimir@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ class AwsS3BuildCacheServiceFactoryTest {
         buildCacheDescriber = NoopBuildCacheDescriber()
     }
 
-    private fun buildCache(action: AwsS3BuildCache.()->Unit) = AwsS3BuildCache().apply(action)
+    private fun buildCache(action: AwsS3BuildCache.() -> Unit) = AwsS3BuildCache().apply(action)
 
     @Test
     fun testWhat() {

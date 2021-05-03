@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Vladimir Sitnikov <sitnikov.vladimir@gmail.com>
+ * Copyright 2020-2021 Vladimir Sitnikov <sitnikov.vladimir@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,21 +21,22 @@ import java.net.URISyntaxException
 import java.net.URL
 import java.nio.file.Paths
 
-val URL.asFile: File get() {
-    if ("file" != protocol) {
-        throw IllegalArgumentException("URL protocol must be file, got $protocol")
+val URL.asFile: File
+    get() {
+        if ("file" != protocol) {
+            throw IllegalArgumentException("URL protocol must be file, got $protocol")
+        }
+        val uri = try {
+            toURI()
+        } catch (e: URISyntaxException) {
+            throw IllegalArgumentException("Unable to convert URL $this to URI", e)
+        }
+        return if (uri.isOpaque) {
+            // It is like file:test%20file.c++
+            // getSchemeSpecificPart would return "test file.c++"
+            File(uri.schemeSpecificPart)
+        } else {
+            // See https://stackoverflow.com/a/17870390/1261287
+            Paths.get(uri).toFile()
+        }
     }
-    val uri = try {
-        toURI()
-    } catch (e: URISyntaxException) {
-        throw IllegalArgumentException("Unable to convert URL $this to URI", e)
-    }
-    return if (uri.isOpaque) {
-        // It is like file:test%20file.c++
-        // getSchemeSpecificPart would return "test file.c++"
-        File(uri.schemeSpecificPart)
-    } else {
-        // See https://stackoverflow.com/a/17870390/1261287
-        Paths.get(uri).toFile()
-    }
-}

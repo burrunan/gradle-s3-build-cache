@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Vladimir Sitnikov <sitnikov.vladimir@gmail.com>
+ * Copyright 2020-2021 Vladimir Sitnikov <sitnikov.vladimir@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package com.github.burrunan.s3cache
 
 import com.adobe.testing.s3mock.junit5.S3MockExtension
 
-class S3MockBuilder: S3MockExtension.Builder() {
+class S3MockBuilder : S3MockExtension.Builder() {
     fun withParameter(name: String, value: String): S3MockBuilder = apply {
         arguments[name] = value
     }
