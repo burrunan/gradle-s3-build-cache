@@ -58,8 +58,7 @@ kotlinDslPluginOptions {
 }
 
 dependencies {
-    implementation(platform("software.amazon.awssdk:bom:2.16.52"))
-    implementation("software.amazon.awssdk:s3") {
+    implementation("software.amazon.awssdk:s3:2.17.106") {
         // We do not use netty client so far
         exclude("software.amazon.awssdk", "netty-nio-client")
     }
