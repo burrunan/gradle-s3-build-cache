@@ -37,7 +37,7 @@ dependency to the plugin to your `settings.gradle` file. Get the latest version 
 
 ```
 plugins {
-  id("com.github.burrunan.s3-build-cache") version "1.2"
+  id("com.github.burrunan.s3-build-cache") version "1.3"
 }
 ```
 
@@ -100,7 +100,7 @@ Kotlin DSL:
 // This goes to settings.gradle.kts
 
 plugins {
-    id("com.github.burrunan.s3-build-cache") version "1.2"
+    id("com.github.burrunan.s3-build-cache") version "1.3"
 }
 
 val isCiServer = System.getenv().containsKey("CI")

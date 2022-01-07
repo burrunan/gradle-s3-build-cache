@@ -1,3 +1,8 @@
+#### 1.3
+ - 2022-01-07 - [2 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.2...v1.3)
+##### Changed
+ - Migrate to AWS SDK 2.17.106: it shades Jackson, so less dependencies for s3-build-cache
+
 #### 1.2
 ##### Added
  - Gradle configuration cache support
