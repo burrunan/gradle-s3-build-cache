@@ -17,7 +17,7 @@ plugins {
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 val String.v: String get() = rootProject.extra["$this.version"] as String
