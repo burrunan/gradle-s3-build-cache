@@ -22,6 +22,7 @@ Key improvements are (as of 2020-07-24):
 ## Compatibility
 
 * Version 1.0.0 - Gradle 4.1+
+* Gradle configuration cache - Gradle 7.5+, see https://github.com/gradle/gradle/issues/14874
 
 ## Use in your project
 

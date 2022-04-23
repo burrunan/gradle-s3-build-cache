@@ -21,6 +21,7 @@ import org.gradle.api.JavaVersion
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GradleVersion
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
@@ -34,6 +35,10 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier
 
 @Execution(ExecutionMode.SAME_THREAD)
 class RemoteCacheTest : BaseGradleTest() {
+    enum class ConfigurationCache {
+        ON, OFF
+    }
+
     companion object {
         const val BUCKET_NAME = "test-bucket"
 
@@ -59,25 +64,27 @@ class RemoteCacheTest : BaseGradleTest() {
         private fun gradleVersionAndSettings(): Iterable<Arguments> {
             if (!isCI) {
                 // Use only the minimum supported Gradle version to make the test faster
-                return listOf(arguments("4.1"))
+                return listOf(arguments("4.1", ConfigurationCache.OFF))
             }
             return mutableListOf<Arguments>().apply {
                 if (JavaVersion.current() <= JavaVersion.VERSION_1_8) {
-                    add(arguments("4.1"))
-                    add(arguments("4.4.1"))
+                    add(arguments("4.1", ConfigurationCache.OFF))
+                    add(arguments("4.4.1", ConfigurationCache.OFF))
                 }
                 if (JavaVersion.current() <= JavaVersion.VERSION_12) {
                     addAll(
                         listOf(
-                            arguments("5.6.2"),
-                            arguments("5.4.1"),
-                            arguments("4.10.2")
+                            arguments("5.6.2", ConfigurationCache.OFF),
+                            arguments("5.4.1", ConfigurationCache.OFF),
+                            arguments("4.10.2", ConfigurationCache.OFF)
                         )
                     )
                 }
-                add(arguments("6.0"))
-                add(arguments("6.5"))
-                add(arguments("7.0"))
+                add(arguments("6.0", ConfigurationCache.OFF))
+                add(arguments("6.5", ConfigurationCache.OFF))
+                add(arguments("7.0", ConfigurationCache.OFF))
+                add(arguments("7.4.2", ConfigurationCache.OFF))
+                add(arguments("7.4.2", ConfigurationCache.ON))
             }
         }
     }
@@ -130,9 +137,9 @@ class RemoteCacheTest : BaseGradleTest() {
 
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
-    fun cacheStoreWorks(gradleVersion: String) {
+    fun cacheStoreWorks(gradleVersion: String, configurationCache: ConfigurationCache) {
         val outputFile = "build/out.txt"
-        enableConfigurationCache(gradleVersion)
+        enableConfigurationCache(gradleVersion, configurationCache)
         projectDir.resolve("build.gradle").write(
             """
             tasks.create('props', WriteProperties) {
@@ -161,14 +168,33 @@ class RemoteCacheTest : BaseGradleTest() {
         assertEquals(TaskOutcome.FROM_CACHE, result2.task(":props")?.outcome) {
             "second execution => task should be resolved from cache"
         }
+        // Once more, with configuration cache
+        if (configurationCache == ConfigurationCache.ON) {
+            // Delete output to force task re-execution
+            projectDir.resolve(outputFile).toFile().delete()
+            val result3 = prepare(gradleVersion, "props", "props2", "-i").build()
+            if (isCI) {
+                println(result3.output)
+            }
+            assertEquals(TaskOutcome.FROM_CACHE, result3.task(":props")?.outcome) {
+                "second execution => task should be resolved from cache"
+            }
+        }
     }
 
-    private fun enableConfigurationCache(gradleVersion: String) {
-        if (GradleVersion.version(gradleVersion) >= GradleVersion.version("7.0")) {
-            // Gradle 6.5 expects values ON, OFF, WARN, so we add the option for 7.0 only
-            projectDir.resolve("gradle.properties").toFile().appendText(
-                "\norg.gradle.unsafe.configuration-cache=true\n"
-            )
+    private fun enableConfigurationCache(
+        gradleVersion: String,
+        configurationCache: ConfigurationCache
+    ) {
+        if (configurationCache != ConfigurationCache.ON) {
+            return
         }
+        if (GradleVersion.version(gradleVersion) < GradleVersion.version("7.0")) {
+            fail<Unit>("Gradle version $gradleVersion does not support configuration cache")
+        }
+        // Gradle 6.5 expects values ON, OFF, WARN, so we add the option for 7.0 only
+        projectDir.resolve("gradle.properties").toFile().appendText(
+            "\norg.gradle.unsafe.configuration-cache=true\n"
+        )
     }
 }
