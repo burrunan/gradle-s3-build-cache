@@ -26,7 +26,9 @@ Key improvements are (as of 2020-07-24):
 
 ## Use in your project
 
-Please note that this plugin is not yet ready for production. Feedback though is very welcome.
+The plugin is stable, so we encourage you to use it in your projects.
+
+Feedback is very welcome.
 Please open an [issue](https://github.com/burrunan/gradle-s3-build-cache/issues) if you find a bug or 
 have an idea for an improvement.
 
