@@ -58,7 +58,7 @@ kotlinDslPluginOptions {
 }
 
 dependencies {
-    implementation(platform("software.amazon.awssdk:bom:2.17.106"))
+    implementation(platform("software.amazon.awssdk:bom:2.17.267"))
     // Needed to automatically enable AWS SSO login
     implementation("software.amazon.awssdk:sso")
     implementation("software.amazon.awssdk:s3") {
