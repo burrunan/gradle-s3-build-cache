@@ -59,8 +59,9 @@ kotlinDslPluginOptions {
 
 dependencies {
     implementation(platform("software.amazon.awssdk:bom:2.17.267"))
-    // Needed to automatically enable AWS SSO login
-    implementation("software.amazon.awssdk:sso")
+    implementation("software.amazon.awssdk:sso") {
+        because("Needed to automatically enable AWS SSO login, see https://stackoverflow.com/a/67824174")
+    }
     implementation("software.amazon.awssdk:s3") {
         // We do not use netty client so far
         exclude("software.amazon.awssdk", "netty-nio-client")
