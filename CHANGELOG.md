@@ -1,9 +1,11 @@
 #### 1.4
+ - 2022-09-07 - [12 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.3...v1.4)
 #### Changed
  - Updated AWS SDK to 2.17.267
  - Added software.amazon.awssdk:sso dependency to support AWS SSO login [PR#18](https://github.com/burrunan/gradle-s3-build-cache/pull/18)
+ - Removed references of jcenter repository [PR#15](https://github.com/burrunan/gradle-s3-build-cache/pull/15)
 
-Thanks to https://github.com/francescocervone for [PR#18](https://github.com/burrunan/gradle-s3-build-cache/pull/18).
+Thanks to https://github.com/devdavidkarlsson, and https://github.com/francescocervone for contributions.
 
 #### 1.3
  - 2022-01-07 - [2 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.2...v1.3)
