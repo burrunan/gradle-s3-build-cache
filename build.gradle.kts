@@ -66,6 +66,7 @@ dependencies {
         // We do not use netty client so far
         exclude("software.amazon.awssdk", "netty-nio-client")
     }
+    runtimeOnly("software.amazon.awssdk:sts")
 
     testImplementation(platform("org.junit:junit-bom:5.7.1"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
