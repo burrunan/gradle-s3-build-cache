@@ -1,3 +1,10 @@
+#### 1.5
+ - 2022-10-05 - [4 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.4...v1.5)
+#### Changed
+ - Added AWS STS dependency for profile-based authentication
+
+Thanks to https://github.com/run3wide for the contribution!
+
 #### 1.4
  - 2022-09-07 - [12 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.3...v1.4)
 #### Changed
