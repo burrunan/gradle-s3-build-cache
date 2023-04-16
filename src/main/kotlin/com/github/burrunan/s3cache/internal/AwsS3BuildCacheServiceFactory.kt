@@ -26,6 +26,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.S3ClientBuilder
+import software.amazon.awssdk.services.s3.S3Configuration
 import java.net.URI
 
 private val logger = LoggerFactory.getLogger(AwsS3BuildCacheServiceFactory::class.java)
@@ -43,6 +44,7 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
             describe("Reduced Redundancy", config.isReducedRedundancy)
             describe("Prefix", config.prefix)
             describe("Endpoint", config.endpoint)
+            describe("Transfer Acceleration", config.transferAcceleration)
         }
         verifyConfig(config)
         return AwsS3BuildCacheService(
@@ -78,6 +80,7 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
             val endpoint = if (it.startsWith("http")) it else "https://${it}"
             endpointOverride(URI.create(endpoint))
         }
+        transferAcceleration(config)
         build()
     }
 
@@ -115,5 +118,10 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
                 )
         }
         credentialsProvider(credentials)
+    }
+
+    private fun S3ClientBuilder.transferAcceleration(config: AwsS3BuildCache) {
+        val s3Conf = S3Configuration.builder().accelerateModeEnabled(config.transferAcceleration).build()
+        serviceConfiguration(s3Conf)
     }
 }
