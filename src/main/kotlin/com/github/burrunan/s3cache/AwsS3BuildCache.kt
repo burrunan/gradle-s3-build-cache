@@ -36,4 +36,5 @@ open class AwsS3BuildCache : AbstractBuildCache() {
     var showStatisticsWhenSavingsExceeds: Long = 100
     var showStatisticsWhenWasteExceeds: Long = 100
     var showStatisticsWhenTransferExceeds: Long = 10 * 1024 * 1024
+    var transferAcceleration: Boolean? = false
 }
