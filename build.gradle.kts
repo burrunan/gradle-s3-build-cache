@@ -10,10 +10,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     `maven-publish`
     `kotlin-dsl`
-    id("com.gradle.plugin-publish") version "0.12.0"
-    id("com.github.vlsi.crlf") version "1.70"
-    id("com.github.vlsi.gradle-extensions") version "1.70"
-    id("com.github.vlsi.stage-vote-release") version "1.70"
+    id("com.gradle.plugin-publish") version "1.2.0"
+    id("com.github.vlsi.crlf") version "1.88"
+    id("com.github.vlsi.gradle-extensions") version "1.88"
+    id("com.github.vlsi.stage-vote-release") version "1.88"
 }
 
 repositories {
@@ -58,7 +58,12 @@ kotlinDslPluginOptions {
 }
 
 dependencies {
-    implementation(platform("software.amazon.awssdk:bom:2.17.267"))
+    constraints {
+        implementation("org.apache.httpcomponents:httpclient:4.5.14") {
+            because("httpclient 4.5.13 fails to verify *.s3.amazonaws.com certificates, see https://github.com/burrunan/gradle-s3-build-cache/issues/23")
+        }
+    }
+    implementation(platform("software.amazon.awssdk:bom:2.20.61"))
     implementation("software.amazon.awssdk:sso") {
         because("Needed to automatically enable AWS SSO login, see https://stackoverflow.com/a/67824174")
     }
@@ -68,7 +73,7 @@ dependencies {
     }
     runtimeOnly("software.amazon.awssdk:sts")
 
-    testImplementation(platform("org.junit:junit-bom:5.7.1"))
+    testImplementation(platform("org.junit:junit-bom:5.9.3"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testImplementation("com.adobe.testing:s3mock-junit5:2.1.22") {
@@ -84,6 +89,7 @@ gradlePlugin {
     plugins {
         create("s3BuildCache") {
             id = "com.github.burrunan.s3-build-cache"
+            displayName = "AWS S3 build cache"
             implementationClass = "com.github.burrunan.s3cache.AwsS3Plugin"
         }
     }
@@ -94,13 +100,6 @@ pluginBundle {
     vcsUrl = "https://github.com/burrunan/gradle-s3-build-cache"
     description = "An AWS S3 build cache implementation"
     tags = listOf("build-cache", "s3")
-
-    (plugins) {
-        "s3BuildCache" {
-            id = "com.github.burrunan.s3-build-cache"
-            displayName = "AWS S3 build cache"
-        }
-    }
 }
 
 tasks.wrapper {
