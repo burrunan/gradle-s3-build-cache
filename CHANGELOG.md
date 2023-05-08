@@ -3,12 +3,15 @@
 
 ### Added
  - forcePathStyle option to use path-style S3 URLs. By default S3 client uses subdomains for buckets, which is not supported by some S3-compatible storages (e.g. S3MockClient)
- - Added support for specifying AWS profile in DSL
+ - transferAcceleration option to enable [S3 Transfer Acceleration](https://aws.amazon.com/ru/s3/transfer-acceleration/) [PR#22](https://github.com/burrunan/gradle-s3-build-cache/pull/22)
+ - Added support for specifying AWS profile in DSL [PR#24](https://github.com/burrunan/gradle-s3-build-cache/pull/24)
 
 #### Changed
  - Updated software.amazon.awssdk from 2.17.267 to 2.20.61
  - Add dependency on httpclient 4.5.14 to workaround certificate resolution bug (see [issue#23](https://github.com/burrunan/gradle-s3-build-cache/issues/23))
  - Updated build-time dependencies
+
+Thanks to [@Shaftway](https://github.com/Shaftway), and [@guynaa](https://github.com/guynaa) for the contributions.
 
 #### 1.5
  - 2022-10-05 - [4 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.4...v1.5)
