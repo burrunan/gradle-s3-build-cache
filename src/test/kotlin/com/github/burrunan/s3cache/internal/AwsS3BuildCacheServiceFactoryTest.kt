@@ -125,4 +125,15 @@ class AwsS3BuildCacheServiceFactoryTest {
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)
     }
+
+    @Test
+    fun testAWSProfileCredentials() {
+        val conf = buildCache {
+            bucket = "my-bucket"
+            region = "us-west-1"
+            awsProfile = "any aws profile"
+        }
+        val service = subject.createBuildCacheService(conf, buildCacheDescriber)
+        Assertions.assertNotNull(service)
+    }
 }

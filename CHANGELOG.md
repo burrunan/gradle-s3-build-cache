@@ -1,3 +1,8 @@
+#### Unreleased
+ - *TBD*
+#### Changed
+ - Added support for specifying AWS profile in DSL
+
 #### 1.5
  - 2022-10-05 - [4 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.4...v1.5)
 #### Changed

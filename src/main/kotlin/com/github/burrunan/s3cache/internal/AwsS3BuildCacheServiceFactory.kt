@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
@@ -99,6 +100,8 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
         val credentials = when {
             config.awsAccessKeyId.isNullOrBlank() || config.awsSecretKey.isNullOrBlank() -> when {
                 config.lookupDefaultAwsCredentials -> return
+                !config.awsProfile.isNullOrBlank() ->
+                    ProfileCredentialsProvider.create(config.awsProfile)
                 else -> AnonymousCredentialsProvider.create()
             }
             else ->
