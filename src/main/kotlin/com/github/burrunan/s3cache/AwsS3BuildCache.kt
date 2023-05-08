@@ -28,6 +28,7 @@ open class AwsS3BuildCache : AbstractBuildCache() {
     var awsAccessKeyId: String? = System.getenv("S3_BUILD_CACHE_ACCESS_KEY_ID")
     var awsSecretKey: String? = System.getenv("S3_BUILD_CACHE_SECRET_KEY")
     var sessionToken: String? = System.getenv("S3_BUILD_CACHE_SESSION_TOKEN")
+    var awsProfile: String? = System.getenv("S3_BUILD_CACHE_PROFILE")
     var lookupDefaultAwsCredentials: Boolean = false
     var showStatistics: Boolean = true
     var showStatisticsWhenImpactExceeds: Long = 100

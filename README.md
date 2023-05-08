@@ -60,6 +60,7 @@ The AWS S3 build cache implementation has a few configuration options:
 | `awsAccessKeyId` | The AWS access key id | no | `getenv("S3_BUILD_CACHE_ACCESS_KEY_ID")` |
 | `awsSecretKey` | The AWS secret key | no | `getenv("S3_BUILD_CACHE_SECRET_KEY")` |
 | `sessionToken` | The AWS sessionToken when you use temporal credentials | no | `getenv("S3_BUILD_CACHE_SESSION_TOKEN")` |
+| `awsProfile` | The AWS profile to use for authentication | no | `getenv("S3_BUILD_CACHE_PROFILE")` |
 | `lookupDefaultAwsCredentials` | Configures if `DefaultAWSCredentialsProviderChain` could be used to lookup credentials | yes | false | 
 | `showStatistics` | Displays statistics on the remote cache performance | Yes | `true` |
 | `showStatisticsWhenImpactExceeds` | Specifies minimum duration to trigger printing the stats, milliseconds | Yes | `100` |
@@ -135,7 +136,11 @@ environment variables.
 
 If you want to use AWS default credentials [`DefaultAWSCredentialsProviderChain`](http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html),
 then configure `lookupDefaultAwsCredentials=true`.
-Note: it will still try `S3_BUILD_CACHE_` variables first.
+
+If you want to use a specific [AWS profile](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/credentials-profiles.html),
+then configure `awsProfile="<profile_name>"`.
+
+Note: even with these values set, it will still try `S3_BUILD_CACHE_` variables first.
 
 ### S3 Bucket Permissions for cache population
 
