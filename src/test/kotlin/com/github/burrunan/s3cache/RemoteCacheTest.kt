@@ -129,6 +129,8 @@ class RemoteCacheTest : BaseGradleTest() {
                     bucket = '$BUCKET_NAME'
                     prefix = 'build-cache/'
                     endpoint = 'localhost:${mockApp.port}'
+                    // See https://github.com/adobe/S3Mock/issues/880
+                    forcePathStyle = true
                     push = true
                 }
             }

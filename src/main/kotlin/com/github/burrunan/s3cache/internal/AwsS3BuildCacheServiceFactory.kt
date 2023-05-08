@@ -75,6 +75,9 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
         addHttpHeaders(config)
         addCredentials(config)
         region(Region.of(config.region))
+        if (config.forcePathStyle) {
+            forcePathStyle(true)
+        }
         config.endpoint?.let {
             val endpoint = if (it.startsWith("http")) it else "https://${it}"
             endpointOverride(URI.create(endpoint))

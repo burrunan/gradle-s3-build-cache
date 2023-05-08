@@ -1,7 +1,11 @@
 #### Unreleased
  - *TBD*
-#### Changed
+
+### Added
+ - forcePathStyle option to use path-style S3 URLs. By default S3 client uses subdomains for buckets, which is not supported by some S3-compatible storages (e.g. S3MockClient)
  - Added support for specifying AWS profile in DSL
+
+#### Changed
  - Updated software.amazon.awssdk from 2.17.267 to 2.20.61
  - Add dependency on httpclient 4.5.14 to workaround certificate resolution bug (see [issue#23](https://github.com/burrunan/gradle-s3-build-cache/issues/23))
  - Updated build-time dependencies

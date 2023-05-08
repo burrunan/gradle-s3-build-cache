@@ -24,6 +24,7 @@ open class AwsS3BuildCache : AbstractBuildCache() {
     var maximumCachedObjectLength: Long = 50 * 1024 * 1024
     var isReducedRedundancy = true
     var endpoint: String? = null
+    var forcePathStyle: Boolean = false
     var headers: Map<String?, String?>? = null
     var awsAccessKeyId: String? = System.getenv("S3_BUILD_CACHE_ACCESS_KEY_ID")
     var awsSecretKey: String? = System.getenv("S3_BUILD_CACHE_SECRET_KEY")
