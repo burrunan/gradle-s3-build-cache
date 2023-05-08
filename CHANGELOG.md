@@ -1,5 +1,5 @@
-#### Unreleased
- - *TBD*
+#### 1.6
+ - 2023-05-08 - [6 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.5...v1.6)
 
 ### Added
  - forcePathStyle option to use path-style S3 URLs. By default S3 client uses subdomains for buckets, which is not supported by some S3-compatible storages (e.g. S3MockClient)
