@@ -16,6 +16,7 @@
 package com.github.burrunan.s3cache
 
 import org.gradle.caching.configuration.AbstractBuildCache
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 
 open class AwsS3BuildCache : AbstractBuildCache() {
     var region: String? = null
@@ -31,6 +32,7 @@ open class AwsS3BuildCache : AbstractBuildCache() {
     var sessionToken: String? = System.getenv("S3_BUILD_CACHE_SESSION_TOKEN")
     var awsProfile: String? = System.getenv("S3_BUILD_CACHE_PROFILE")
     var lookupDefaultAwsCredentials: Boolean = false
+    var credentialsProvider: AwsCredentialsProvider? = null
     var showStatistics: Boolean = true
     var showStatisticsWhenImpactExceeds: Long = 100
     var showStatisticsWhenSavingsExceeds: Long = 100
