@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider
 
 class AwsS3BuildCacheServiceFactoryTest {
     private lateinit var subject: AwsS3BuildCacheServiceFactory
@@ -132,6 +133,17 @@ class AwsS3BuildCacheServiceFactoryTest {
             bucket = "my-bucket"
             region = "us-west-1"
             awsProfile = "any aws profile"
+        }
+        val service = subject.createBuildCacheService(conf, buildCacheDescriber)
+        Assertions.assertNotNull(service)
+    }
+
+    @Test
+    fun testAWSProviderCredentials() {
+        val conf = buildCache {
+            bucket = "my-bucket"
+            region = "us-west-1"
+            credentialsProvider = AnonymousCredentialsProvider.create()
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)
