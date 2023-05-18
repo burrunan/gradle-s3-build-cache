@@ -119,6 +119,7 @@ class RemoteCacheTest : BaseGradleTest() {
 
         createSettings(
             """
+            import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider
             buildCache {
                 local {
                     // Only remote cache should be used
@@ -132,6 +133,7 @@ class RemoteCacheTest : BaseGradleTest() {
                     // See https://github.com/adobe/S3Mock/issues/880
                     forcePathStyle = true
                     push = true
+                    credentialsProvider = AnonymousCredentialsProvider.create()
                 }
             }
         """.trimIndent()
