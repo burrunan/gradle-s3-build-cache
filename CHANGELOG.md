@@ -1,3 +1,11 @@
+#### 1.7
+ - 2023-07-10 - [6 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.6...v1.7)
+
+### Added
+ - Allow passing instance of AwsCredentialsProvider to configuration [PR#22](https://github.com/burrunan/gradle-s3-build-cache/pull/25)
+
+Thanks to [@joshfriend](https://github.com/joshfriend) for the contributions.
+
 #### 1.6
  - 2023-05-08 - [6 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.5...v1.6)
 
