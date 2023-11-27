@@ -10,10 +10,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     `maven-publish`
     `kotlin-dsl`
-    id("com.gradle.plugin-publish") version "1.2.0"
-    id("com.github.vlsi.crlf") version "1.88"
-    id("com.github.vlsi.gradle-extensions") version "1.88"
-    id("com.github.vlsi.stage-vote-release") version "1.88"
+    id("com.gradle.plugin-publish") version "1.2.1"
+    id("com.github.vlsi.crlf") version "1.90"
+    id("com.github.vlsi.gradle-extensions") version "1.90"
+    id("com.github.vlsi.stage-vote-release") version "1.90"
 }
 
 repositories {
@@ -63,7 +63,7 @@ dependencies {
             because("httpclient 4.5.13 fails to verify *.s3.amazonaws.com certificates, see https://github.com/burrunan/gradle-s3-build-cache/issues/23")
         }
     }
-    implementation(platform("software.amazon.awssdk:bom:2.20.61"))
+    implementation(platform("software.amazon.awssdk:bom:2.21.29"))
     implementation("software.amazon.awssdk:sso") {
         because("Needed to automatically enable AWS SSO login, see https://stackoverflow.com/a/67824174")
     }
@@ -73,10 +73,10 @@ dependencies {
     }
     runtimeOnly("software.amazon.awssdk:sts")
 
-    testImplementation(platform("org.junit:junit-bom:5.9.3"))
+    testImplementation(platform("org.junit:junit-bom:2.21.27"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
-    testImplementation("com.adobe.testing:s3mock-junit5:2.11.0") {
+    testImplementation("com.adobe.testing:s3mock-junit5:2.17.0") {
         // Gradle has its own logging
         exclude("ch.qos.logback", "logback-classic")
         exclude("org.apache.logging.log4j", "log4j-to-slf4j")
@@ -103,7 +103,7 @@ pluginBundle {
 }
 
 tasks.wrapper {
-    gradleVersion = "6.8.3"
+    gradleVersion = "8.4"
     distributionType = DistributionType.BIN
 }
 

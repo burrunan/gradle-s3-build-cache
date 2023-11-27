@@ -64,7 +64,7 @@ class RemoteCacheTest : BaseGradleTest() {
         private fun gradleVersionAndSettings(): Iterable<Arguments> {
             if (!isCI) {
                 // Use only the minimum supported Gradle version to make the test faster
-                return listOf(arguments("4.1", ConfigurationCache.OFF))
+                return listOf(arguments("5.0", ConfigurationCache.OFF))
             }
             return mutableListOf<Arguments>().apply {
                 if (JavaVersion.current() <= JavaVersion.VERSION_1_8) {
