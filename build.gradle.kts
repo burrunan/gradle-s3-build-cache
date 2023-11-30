@@ -67,6 +67,9 @@ dependencies {
     implementation("software.amazon.awssdk:sso") {
         because("Needed to automatically enable AWS SSO login, see https://stackoverflow.com/a/67824174")
     }
+    implementation ("software.amazon.awssdk:ssooidc") {
+        because("Needed to automatically enable AWS SSO login, see https://stackoverflow.com/a/67824174")
+    }
     implementation("software.amazon.awssdk:s3") {
         // We do not use netty client so far
         exclude("software.amazon.awssdk", "netty-nio-client")
