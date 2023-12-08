@@ -4,5 +4,11 @@
     "config:base"
   ],
   "labels": ["dependencies"],
-  "schedule": ["every 3 weeks on Monday"]
+  "schedule": ["every 3 weeks on Monday"],
+  "packageRules": [
+    {
+      "matchPackagePrefixes": ["com.github.vlsi"],
+      "groupName": "com.github.vlsi"
+    }
+  ]
 }
