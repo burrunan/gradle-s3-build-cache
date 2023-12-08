@@ -53,10 +53,6 @@ releaseParams {
     }
 }
 
-kotlinDslPluginOptions {
-    experimentalWarning.set(false)
-}
-
 dependencies {
     constraints {
         implementation("org.apache.httpcomponents:httpclient:4.5.14") {
@@ -86,20 +82,16 @@ dependencies {
 }
 
 gradlePlugin {
+    website.set("https://github.com/burrunan/gradle-s3-build-cache")
+    vcsUrl.set("https://github.com/burrunan/gradle-s3-build-cache")
     plugins {
         create("s3BuildCache") {
             id = "com.github.burrunan.s3-build-cache"
+            tags.set(listOf("build-cache", "s3"))
             displayName = "AWS S3 build cache"
             implementationClass = "com.github.burrunan.s3cache.AwsS3Plugin"
         }
     }
-}
-
-pluginBundle {
-    website = "https://github.com/burrunan/gradle-s3-build-cache"
-    vcsUrl = "https://github.com/burrunan/gradle-s3-build-cache"
-    description = "An AWS S3 build cache implementation"
-    tags = listOf("build-cache", "s3")
 }
 
 tasks.wrapper {
