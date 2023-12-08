@@ -11,9 +11,9 @@ plugins {
     `maven-publish`
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.2.0"
-    id("com.github.vlsi.crlf") version "1.88"
-    id("com.github.vlsi.gradle-extensions") version "1.88"
-    id("com.github.vlsi.stage-vote-release") version "1.88"
+    id("com.github.vlsi.crlf") version "1.90"
+    id("com.github.vlsi.gradle-extensions") version "1.90"
+    id("com.github.vlsi.stage-vote-release") version "1.90"
 }
 
 repositories {
