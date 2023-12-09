@@ -96,6 +96,7 @@ gradlePlugin {
             id = "com.github.burrunan.s3-build-cache"
             tags.set(listOf("build-cache", "s3"))
             displayName = "AWS S3 build cache"
+            description = "An AWS S3 build cache implementation"
             implementationClass = "com.github.burrunan.s3cache.AwsS3Plugin"
         }
     }
