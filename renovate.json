@@ -7,6 +7,11 @@
   "schedule": ["every 3 weeks on Monday"],
   "packageRules": [
     {
+      "matchPackageNames": ["com.adobe.testing:s3mock-junit5"],
+      "groupName": "s3mock-junit5",
+      "allowedVersions": "< 3.0"
+    },
+    {
       "matchPackagePrefixes": ["com.github.vlsi"],
       "groupName": "com.github.vlsi"
     }
