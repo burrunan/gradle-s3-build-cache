@@ -6,6 +6,7 @@ import com.github.vlsi.gradle.publishing.dsl.simplifyXml
 import com.github.vlsi.gradle.publishing.dsl.versionFromResolution
 import org.gradle.api.tasks.wrapper.Wrapper.DistributionType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.*
 
 plugins {
     `maven-publish`
@@ -30,6 +31,9 @@ val enableGradleMetadata by props()
 val autostyleSelf by props()
 val skipAutostyle by props()
 val skipJavadoc by props()
+val buildJdk by props.int
+val targetJdk by props.int
+val testJdk by props.int
 
 releaseParams {
     tlp.set("gradle-s3-build-cache")
@@ -116,8 +120,9 @@ allprojects {
 
     plugins.withId("java") {
         java {
-            sourceCompatibility = JavaVersion.VERSION_1_8
-            targetCompatibility = JavaVersion.VERSION_1_8
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(buildJdk))
+            }
             withSourcesJar()
             if (!skipJavadoc) {
                 withJavadocJar()
@@ -135,6 +140,7 @@ allprojects {
         tasks {
             configureEach<JavaCompile> {
                 options.encoding = "UTF-8"
+                options.release.set(targetJdk)
             }
 
             afterEvaluate {
@@ -166,6 +172,12 @@ allprojects {
 
             configureEach<Test> {
                 useJUnitPlatform()
+                javaLauncher.set(
+                    project.javaToolchains.launcherFor {
+                        languageVersion.set(JavaLanguageVersion.of(testJdk))
+                    }
+                )
+
                 // Keystore configuration for S3Mock server
                 systemProperty("server.ssl.key-store", "classpath:test_keystore.jks")
                 systemProperty("server.ssl.key-store-password", "password")
@@ -184,7 +196,9 @@ allprojects {
 
         tasks.configureEach<KotlinCompile> {
             kotlinOptions {
-                jvmTarget = "1.8"
+                val jdkRelease = if (targetJdk < 9) "1.8" else targetJdk.toString()
+                jvmTarget = jdkRelease
+                freeCompilerArgs += "-Xjdk-release=$jdkRelease"
             }
         }
 
@@ -214,13 +228,18 @@ allprojects {
                         simplifyXml()
                         // afterEvaluate is a workaround to add entries to plugin marker pom
                         afterEvaluate {
+                            val defaultName = "Gradle S3 Build Cache ${project.name.replaceFirstChar {
+                                if (it.isLowerCase()) it.titlecase(
+                                    Locale.getDefault()
+                                ) else it.toString()
+                            }}"
                             this@pom.name.set(
                                 (project.findProperty("artifact.name") as? String)
-                                    ?: "Gradle S3 Build Cache ${project.name.capitalize()}"
+                                    ?: defaultName
                             )
                             this@pom.description.set(
                                 project.description
-                                    ?: "Gradle S3 Build Cache ${project.name.capitalize()}"
+                                    ?: defaultName
                             )
                         }
                         developers {

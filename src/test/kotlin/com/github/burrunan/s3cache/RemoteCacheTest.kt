@@ -117,6 +117,7 @@ class RemoteCacheTest : BaseGradleTest() {
         """.trimIndent()
         )
 
+        @Suppress("DEPRECATION")
         createSettings(
             """
             import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider
