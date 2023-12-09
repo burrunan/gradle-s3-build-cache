@@ -1,3 +1,14 @@
+#### 1.8
+ - 2023-12-09 - [6 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.7...v1.8)
+
+### Added
+ - Added software.amazon.awssdk:ssooidc dependency to support AWS SSO login [PR#30](https://github.com/burrunan/gradle-s3-build-cache/pull/30)
+ - Added Renovate bot to bump dependencies
+
+### Changed
+ - Updated software.amazon.awssdk from 2.20.61 to 2.21.42
+ - Updated build-time dependencies
+
 #### 1.7
  - 2023-07-10 - [6 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.6...v1.7)
 
