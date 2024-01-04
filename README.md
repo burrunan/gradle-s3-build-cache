@@ -40,7 +40,7 @@ dependency to the plugin to your `settings.gradle` file. Get the latest version 
 
 ```
 plugins {
-  id("com.github.burrunan.s3-build-cache") version "1.5"
+  id("com.github.burrunan.s3-build-cache") version "1.8.1"
 }
 ```
 
