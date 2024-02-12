@@ -34,7 +34,7 @@ jobs:
           ~/.gradle/caches/
         key: gradle-${{ runner.os }}-caches-${{ hashFiles('build.properties', '**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
     - name: Build
-      uses: eskatos/gradle-command-action@v2
+      uses: eskatos/gradle-command-action@v3
       with:
         gradle-version: wrapper
         arguments: --no-parallel --no-daemon build
