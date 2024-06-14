@@ -44,6 +44,7 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
             describe("Bucket", config.bucket)
             describe("Reduced Redundancy", config.isReducedRedundancy)
             describe("Prefix", config.prefix)
+            describe("KMS Key ID", config.kmsKeyId)
             describe("Endpoint", config.endpoint)
             describe("Transfer Acceleration", config.transferAcceleration)
         }
@@ -52,6 +53,7 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
             { createS3Client(config) },
             config.bucket!!,
             config.prefix,
+            config.kmsKeyId,
             config.isReducedRedundancy,
             config.maximumCachedObjectLength,
             config.showStatistics,

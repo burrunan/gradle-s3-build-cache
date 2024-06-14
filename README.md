@@ -69,6 +69,7 @@ The AWS S3 build cache implementation has a few configuration options:
 | `showStatisticsWhenSavingsExceeds`  | Specifies minimum duration to trigger printing the stats, milliseconds                                                                            | Yes       | `100`                                    |
 | `showStatisticsWhenWasteExceeds`    | Specifies minimum duration to trigger printing the stats, milliseconds                                                                            | Yes       | `100`                                    |
 | `showStatisticsWhenTransferExceeds` | Specifies minimum transfer size to trigger printing the stats, bytes                                                                              | Yes       | 10*1024*1024                             |
+| `kmsKeyId`                          | The ID of the KMS key to encrypt cache objects in S3. ([Using KMS Encryption](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html)) | no |                                     |
 
 Note: if both `awsAccessKeyId` and `awsSecretKey` are `nullOrBlank` (`null` or whitespace only), then anonymous credentials are used.
 
