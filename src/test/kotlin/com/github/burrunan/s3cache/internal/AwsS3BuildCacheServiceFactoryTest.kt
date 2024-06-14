@@ -148,4 +148,15 @@ class AwsS3BuildCacheServiceFactoryTest {
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)
     }
+
+    @Test
+    fun kmsKeyId() {
+        val conf = buildCache {
+            region = "us-west-1"
+            bucket = "my-bucket"
+            kmsKeyId = "972393be-674f-4bdc-87ff-ea1b2588a1c6"
+        }
+        val service = subject.createBuildCacheService(conf, buildCacheDescriber)
+        Assertions.assertNotNull(service)
+    }
 }

@@ -40,6 +40,7 @@ class AwsS3BuildCacheService internal constructor(
     s3Factory: () -> S3Client,
     private val bucketName: String,
     private val prefix: String?,
+    private val kmsKeyId: String?,
     private val reducedRedundancy: Boolean,
     private val maximumCachedObjectLength: Long,
     private val showStatistics: Boolean,
@@ -245,6 +246,10 @@ class AwsS3BuildCacheService internal constructor(
                 {
                     it.bucket(bucketName)
                     it.key(bucketPath)
+                    if (kmsKeyId != null) {
+                        it.serverSideEncryption("aws:kms")
+                        it.ssekmsKeyId(kmsKeyId)
+                    }
                     it.contentLength(writer.size)
                     it.contentType(BUILD_CACHE_CONTENT_TYPE)
                     if (userMetadata != null) {

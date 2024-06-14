@@ -57,6 +57,7 @@ class RemoteCacheTest : BaseGradleTest() {
             .withParameter("server.ssl.key-alias", "selfsigned")
             .withParameter("server.ssl.key-password", "password")
             .withParameter("server.ssl.key-store-password", "password")
+            .withParameter("com.adobe.testing.s3mock.domain.validKmsKeys", "arn:aws:kms:us-east-1:47110815:key/972393be-674f-4bdc-87ff-ea1b2588a1c6")
             .withInitialBuckets(BUCKET_NAME)
             .build()
 
@@ -130,6 +131,7 @@ class RemoteCacheTest : BaseGradleTest() {
                     region = 'eu-west-1'
                     bucket = '$BUCKET_NAME'
                     prefix = 'build-cache/'
+                    kmsKeyId = '972393be-674f-4bdc-87ff-ea1b2588a1c6'
                     endpoint = 'localhost:${mockApp.port}'
                     // See https://github.com/adobe/S3Mock/issues/880
                     forcePathStyle = true
