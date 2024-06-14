@@ -1,3 +1,13 @@
+#### 1.8.2
+ - 2024-01-04 - [5 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.8.1...v1.8.2)
+### Added
+- Allow specifying a KMS Key ID for server-side encryption [PR#58](https://github.com/burrunan/gradle-s3-build-cache/pull/58)
+
+### Changed
+ - Updated software.amazon.awssdk from 2.22.10 to 2.26.1
+
+Thanks to [@TheImplementer](https://github.com/TheImplementer) for the contribution.
+
 #### 1.8.1
  - 2024-01-04 - [5 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.8...v1.8.1)
 ### Changed
