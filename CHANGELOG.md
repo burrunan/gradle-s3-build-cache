@@ -1,3 +1,9 @@
+#### 1.8.3
+ - 2024-09-09 - [4 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.8.2...v1.8.3)
+### Changed
+ - Updated software.amazon.awssdk from 2.26.1 to 2.26.30
+ - Updated Gradle from 8.5 to 8.9
+
 #### 1.8.2
  - 2024-01-04 - [5 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.8.1...v1.8.2)
 ### Added
