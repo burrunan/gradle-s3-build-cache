@@ -103,7 +103,7 @@ gradlePlugin {
 }
 
 tasks.wrapper {
-    gradleVersion = "8.9"
+    gradleVersion = "8.10"
     distributionType = DistributionType.BIN
 }
 
