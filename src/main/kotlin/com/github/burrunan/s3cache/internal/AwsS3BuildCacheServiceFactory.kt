@@ -117,12 +117,12 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
     }
 
     private fun S3ClientBuilder.addCredentials(config: AwsS3BuildCache) {
-        val awsAccessKeyId = config.awsAccessKeyId?.getOrElse("")  ?: ""
-        val awsSecretKey = config.awsSecretKey?.getOrElse("") ?: ""
+        val awsAccessKeyId = config.awsAccessKeyId?.orNull  ?: ""
+        val awsSecretKey = config.awsSecretKey?.orNull ?: ""
         val credentials = when {
             config.credentialsProvider != null -> config.credentialsProvider
             awsAccessKeyId.isBlank() || awsSecretKey.isBlank() -> {
-                val awsProfile = config.awsProfile?.getOrElse("")
+                val awsProfile = config.awsProfile?.orNull
                 when {
                     config.lookupDefaultAwsCredentials -> return
                     !awsProfile.isNullOrBlank() ->
@@ -133,7 +133,7 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
             }
 
             else -> {
-                val sessionToken = config.sessionToken?.getOrElse("") ?: ""
+                val sessionToken = config.sessionToken?.orNull ?: ""
                 StaticCredentialsProvider.create(
                     if (sessionToken.isNotEmpty() == true) {
                         AwsBasicCredentials.create(awsAccessKeyId, awsSecretKey)
