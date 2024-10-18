@@ -16,6 +16,7 @@
 package com.github.burrunan.s3cache.internal
 
 import com.github.burrunan.s3cache.AwsS3BuildCache
+import org.gradle.api.internal.provider.DefaultProvider
 import org.gradle.caching.BuildCacheServiceFactory
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -119,9 +120,9 @@ class AwsS3BuildCacheServiceFactoryTest {
         val conf = buildCache {
             bucket = "my-bucket"
             region = "us-west-1"
-            awsAccessKeyId = "any aws access key"
-            awsSecretKey = "any secret key"
-            sessionToken = "any session token"
+            awsAccessKeyId = DefaultProvider { "any aws access key" }
+            awsSecretKey = DefaultProvider { "any secret key" }
+            sessionToken = DefaultProvider { "any session token" }
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)
@@ -132,7 +133,7 @@ class AwsS3BuildCacheServiceFactoryTest {
         val conf = buildCache {
             bucket = "my-bucket"
             region = "us-west-1"
-            awsProfile = "any aws profile"
+            awsProfile = DefaultProvider { "any aws profile" }
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)

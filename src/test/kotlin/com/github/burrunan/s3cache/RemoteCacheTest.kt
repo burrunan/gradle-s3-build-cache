@@ -23,6 +23,7 @@ import org.gradle.util.GradleVersion
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -35,6 +36,8 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier
 
 @Execution(ExecutionMode.SAME_THREAD)
 class RemoteCacheTest : BaseGradleTest() {
+    var mockAppPort: Int = 0
+
     enum class ConfigurationCache {
         ON, OFF
     }
@@ -57,7 +60,10 @@ class RemoteCacheTest : BaseGradleTest() {
             .withParameter("server.ssl.key-alias", "selfsigned")
             .withParameter("server.ssl.key-password", "password")
             .withParameter("server.ssl.key-store-password", "password")
-            .withParameter("com.adobe.testing.s3mock.domain.validKmsKeys", "arn:aws:kms:us-east-1:47110815:key/972393be-674f-4bdc-87ff-ea1b2588a1c6")
+            .withParameter(
+                "com.adobe.testing.s3mock.domain.validKmsKeys",
+                "arn:aws:kms:us-east-1:47110815:key/972393be-674f-4bdc-87ff-ea1b2588a1c6"
+            )
             .withInitialBuckets(BUCKET_NAME)
             .build()
 
@@ -118,6 +124,12 @@ class RemoteCacheTest : BaseGradleTest() {
         """.trimIndent()
         )
 
+        mockAppPort = mockApp.port
+    }
+
+    @ParameterizedTest
+    @MethodSource("gradleVersionAndSettings")
+    fun cacheStoreWorks(gradleVersion: String, configurationCache: ConfigurationCache) {
         @Suppress("DEPRECATION")
         createSettings(
             """
@@ -132,7 +144,7 @@ class RemoteCacheTest : BaseGradleTest() {
                     bucket = '$BUCKET_NAME'
                     prefix = 'build-cache/'
                     kmsKeyId = '972393be-674f-4bdc-87ff-ea1b2588a1c6'
-                    endpoint = 'localhost:${mockApp.port}'
+                    endpoint = 'localhost:$mockAppPort'
                     // See https://github.com/adobe/S3Mock/issues/880
                     forcePathStyle = true
                     push = true
@@ -141,11 +153,7 @@ class RemoteCacheTest : BaseGradleTest() {
             }
         """.trimIndent()
         )
-    }
 
-    @ParameterizedTest
-    @MethodSource("gradleVersionAndSettings")
-    fun cacheStoreWorks(gradleVersion: String, configurationCache: ConfigurationCache) {
         val outputFile = "build/out.txt"
         enableConfigurationCache(gradleVersion, configurationCache)
         projectDir.resolve("build.gradle").write(
@@ -187,6 +195,79 @@ class RemoteCacheTest : BaseGradleTest() {
             assertEquals(TaskOutcome.FROM_CACHE, result3.task(":props")?.outcome) {
                 "second execution => task should be resolved from cache"
             }
+        }
+    }
+
+    @Test
+    fun should_configuration_cache_compatible_when_aws_environment_values_update() {
+        @Suppress("DEPRECATION")
+        createSettings(
+            """
+            import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider
+            buildCache {
+                local {
+                    // Only remote cache should be used
+                    enabled = false
+                }
+                remote(com.github.burrunan.s3cache.AwsS3BuildCache) {
+                    region = 'eu-west-1'
+                    bucket = '$BUCKET_NAME'
+                    prefix = 'build-cache/'
+                    kmsKeyId = '972393be-674f-4bdc-87ff-ea1b2588a1c6'
+                    endpoint = 'localhost:$mockAppPort'
+                    // See https://github.com/adobe/S3Mock/issues/880
+                    forcePathStyle = true
+                    push = true
+                    credentialsProvider = AnonymousCredentialsProvider.create()
+                    awsAccessKeyId = providers.environmentVariable("S3_BUILD_CACHE_ACCESS_KEY_ID")
+                    awsSecretKey = providers.environmentVariable("S3_BUILD_CACHE_SECRET_KEY")
+                    sessionToken = providers.environmentVariable("S3_BUILD_CACHE_SESSION_TOKEN")
+                    awsProfile = providers.environmentVariable("S3_BUILD_CACHE_PROFILE")
+                }
+            }
+        """.trimIndent()
+        )
+
+        val outputFile = "build/out.txt"
+        val version = "7.5" // Configuration cache supports custom caches since 7.5 only: https://github.com/gradle/gradle/issues/14874
+        enableConfigurationCache(version, ConfigurationCache.ON)
+        projectDir.resolve("build.gradle").write(
+            """
+            tasks.create('props', WriteProperties) {
+              outputFile = file("$outputFile")
+              property("hello", "world")
+            }
+        """.trimIndent()
+        )
+
+        val runner = gradleRunner
+            .withGradleVersion(version)
+            .withProjectDir(projectDir.toFile())
+        val result = runner
+            .withEnvironment(
+                mapOf(
+                    "S3_BUILD_CACHE_ACCESS_KEY_ID" to "ABCD",
+                    "S3_BUILD_CACHE_SECRET_KEY" to "ABCD",
+                    "S3_BUILD_CACHE_SESSION_TOKEN" to "ABCD",
+                    "S3_BUILD_CACHE_PROFILE" to "ABCD"
+                )
+            )
+            .withArguments(":props", "--configuration-cache")
+            .build()
+        println(result.output)
+        val result2 = runner
+            .withEnvironment(
+                mapOf(
+                    "S3_BUILD_CACHE_ACCESS_KEY_ID" to "EFGH",
+                    "S3_BUILD_CACHE_SECRET_KEY" to "EFGH",
+                    "S3_BUILD_CACHE_SESSION_TOKEN" to "EFGH",
+                    "S3_BUILD_CACHE_PROFILE" to "EFGH"
+                )
+            )
+            .withArguments(":props", "--configuration-cache")
+            .build()
+        require(result2.output.contains("Reusing configuration cache.")) {
+            result2.output
         }
     }
 

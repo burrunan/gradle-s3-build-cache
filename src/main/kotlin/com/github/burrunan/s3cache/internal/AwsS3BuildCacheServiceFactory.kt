@@ -16,6 +16,8 @@
 package com.github.burrunan.s3cache.internal
 
 import com.github.burrunan.s3cache.AwsS3BuildCache
+import org.gradle.api.internal.provider.DefaultProvider
+import org.gradle.api.provider.Provider
 import org.gradle.caching.BuildCacheService
 import org.gradle.caching.BuildCacheServiceFactory
 import org.slf4j.LoggerFactory
@@ -73,6 +75,16 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
     private fun verifyConfig(config: AwsS3BuildCache) {
         check(!config.region.isNullOrEmpty()) { "S3 build cache has no AWS region configured" }
         check(!config.bucket.isNullOrEmpty()) { "S3 build cache has no bucket configured" }
+
+        config.apply {
+            awsAccessKeyId =
+                awsAccessKeyId ?: DefaultProvider { System.getenv("S3_BUILD_CACHE_ACCESS_KEY_ID") }
+            awsSecretKey =
+                awsSecretKey ?: DefaultProvider { System.getenv("S3_BUILD_CACHE_SECRET_KEY") }
+            sessionToken =
+                sessionToken ?: DefaultProvider { System.getenv("S3_BUILD_CACHE_SESSION_TOKEN") }
+            awsProfile = awsProfile ?: DefaultProvider { System.getenv("S3_BUILD_CACHE_PROFILE") }
+        }
     }
 
     private fun createS3Client(config: AwsS3BuildCache) = S3Client.builder().run {
@@ -105,26 +117,35 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
     }
 
     private fun S3ClientBuilder.addCredentials(config: AwsS3BuildCache) {
+        val awsAccessKeyId = config.awsAccessKeyId?.getOrElse("")  ?: ""
+        val awsSecretKey = config.awsSecretKey?.getOrElse("") ?: ""
         val credentials = when {
             config.credentialsProvider != null -> config.credentialsProvider
-            config.awsAccessKeyId.isNullOrBlank() || config.awsSecretKey.isNullOrBlank() -> when {
-                config.lookupDefaultAwsCredentials -> return
-                !config.awsProfile.isNullOrBlank() ->
-                    ProfileCredentialsProvider.create(config.awsProfile)
-                else -> AnonymousCredentialsProvider.create()
+            awsAccessKeyId.isBlank() || awsSecretKey.isBlank() -> {
+                val awsProfile = config.awsProfile?.getOrElse("")
+                when {
+                    config.lookupDefaultAwsCredentials -> return
+                    !awsProfile.isNullOrBlank() ->
+                        ProfileCredentialsProvider.create(awsProfile)
+
+                    else -> AnonymousCredentialsProvider.create()
+                }
             }
-            else ->
+
+            else -> {
+                val sessionToken = config.sessionToken?.getOrElse("") ?: ""
                 StaticCredentialsProvider.create(
-                    if (config.sessionToken.isNullOrEmpty()) {
-                        AwsBasicCredentials.create(config.awsAccessKeyId, config.awsSecretKey)
+                    if (sessionToken.isNotEmpty() == true) {
+                        AwsBasicCredentials.create(awsAccessKeyId, awsSecretKey)
                     } else {
                         AwsSessionCredentials.create(
-                            config.awsAccessKeyId,
-                            config.awsSecretKey,
-                            config.sessionToken
+                            awsAccessKeyId,
+                            awsSecretKey,
+                            sessionToken
                         )
                     }
                 )
+            }
         }
         credentialsProvider(credentials)
     }
