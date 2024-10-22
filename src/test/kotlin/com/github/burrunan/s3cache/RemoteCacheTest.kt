@@ -21,9 +21,9 @@ import org.gradle.api.JavaVersion
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GradleVersion
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.fail
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
@@ -65,7 +65,7 @@ class RemoteCacheTest : BaseGradleTest() {
         private fun gradleVersionAndSettings(): Iterable<Arguments> {
             if (!isCI) {
                 // Use only the minimum supported Gradle version to make the test faster
-                return listOf(arguments("4.1", ConfigurationCache.OFF))
+                return listOf(arguments("8.10.2", ConfigurationCache.ON))
             }
             return mutableListOf<Arguments>().apply {
                 if (JavaVersion.current() <= JavaVersion.VERSION_1_8) {
@@ -87,6 +87,9 @@ class RemoteCacheTest : BaseGradleTest() {
                 add(arguments("7.4.2", ConfigurationCache.OFF))
                 // Configuration cache supports custom caches since 7.5 only: https://github.com/gradle/gradle/issues/14874
                 add(arguments("7.5", ConfigurationCache.ON))
+                add(arguments("7.6.3", ConfigurationCache.ON))
+                add(arguments("8.10.2", ConfigurationCache.ON))
+                add(arguments("8.0.2", ConfigurationCache.ON))
             }
         }
     }
@@ -160,7 +163,7 @@ class RemoteCacheTest : BaseGradleTest() {
             }
         """.trimIndent()
         )
-        val result = prepare(gradleVersion, "props", "-i").build()
+        val result = prepare(gradleVersion, "props", "-i", "-s").build()
         if (isCI) {
             println(result.output)
         }
@@ -169,7 +172,16 @@ class RemoteCacheTest : BaseGradleTest() {
         }
         // Delete output to force task re-execution
         projectDir.resolve(outputFile).toFile().delete()
-        val result2 = prepare(gradleVersion, "props", "props2", "-i").build()
+        val result2 = prepare(gradleVersion, "props", "props2", "-i")
+            .withEnvironment(
+                mapOf(
+                    "S3_BUILD_CACHE_ACCESS_KEY_ID" to "access_key 1",
+                    "S3_BUILD_CACHE_SECRET_KEY" to "secret_key 1",
+                    "S3_BUILD_CACHE_SESSION_TOKEN" to "session_token 1",
+                    "S3_BUILD_CACHE_PROFILE" to "cache_profile 1",
+                )
+            )
+            .build()
         if (isCI) {
             println(result2.output)
         }
@@ -180,9 +192,22 @@ class RemoteCacheTest : BaseGradleTest() {
         if (configurationCache == ConfigurationCache.ON) {
             // Delete output to force task re-execution
             projectDir.resolve(outputFile).toFile().delete()
-            val result3 = prepare(gradleVersion, "props", "props2", "-i").build()
+            // The configuration cache should be reused even though the environment variables change
+            val result3 = prepare(gradleVersion, "props", "props2", "-i", "-s")
+                .withEnvironment(
+                    mapOf(
+                        "S3_BUILD_CACHE_ACCESS_KEY_ID" to "access_key 2",
+                        "S3_BUILD_CACHE_SECRET_KEY" to "secret_key 2",
+                        "S3_BUILD_CACHE_SESSION_TOKEN" to "session_token 2",
+                        "S3_BUILD_CACHE_PROFILE" to "cache_profile 2",
+                    )
+                )
+                .build()
             if (isCI) {
                 println(result3.output)
+            }
+            if (!result3.output.contains("Reusing configuration cache.")) {
+                fail("Configuration cache was not reused")
             }
             assertEquals(TaskOutcome.FROM_CACHE, result3.task(":props")?.outcome) {
                 "second execution => task should be resolved from cache"
@@ -198,7 +223,7 @@ class RemoteCacheTest : BaseGradleTest() {
             return
         }
         if (GradleVersion.version(gradleVersion) < GradleVersion.version("7.0")) {
-            fail<Unit>("Gradle version $gradleVersion does not support configuration cache")
+            fail("Gradle version $gradleVersion does not support configuration cache")
         }
         // Gradle 6.5 expects values ON, OFF, WARN, so we add the option for 7.0 only
         projectDir.resolve("gradle.properties").toFile().appendText(
