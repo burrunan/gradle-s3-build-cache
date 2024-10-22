@@ -1,3 +1,13 @@
+#### 1.8.4
+ - 2024-09-09 - [4 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.8.3...v1.8.4)
+
+### Fixed
+ - Implemented configuration cache reuse in case `S3_BUILD_CACHE_...` environment variables change [commit b603fdfb8424](https://github.com/burrunan/gradle-s3-build-cache/commit/b603fdfb8424d422d6da4b7bee2db7c9f3dfc4c5)
+
+### Changed
+ - Updated software.amazon.awssdk from 2.26.30 to 2.28.27
+ - Updated Gradle from 8.9 to 8.10.2
+
 #### 1.8.3
  - 2024-09-09 - [4 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.8.2...v1.8.3)
 ### Changed
