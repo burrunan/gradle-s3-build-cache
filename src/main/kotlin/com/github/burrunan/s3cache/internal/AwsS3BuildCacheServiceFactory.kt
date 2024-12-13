@@ -24,11 +24,13 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
+import software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.S3ClientBuilder
 import software.amazon.awssdk.services.s3.S3Configuration
 import java.net.URI
+import java.nio.file.Paths
 
 private val logger = LoggerFactory.getLogger(AwsS3BuildCacheServiceFactory::class.java)
 
@@ -106,13 +108,23 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
 
     private fun S3ClientBuilder.addCredentials(config: AwsS3BuildCache) {
         val credentials = when {
-            config.credentialsProvider != null -> config.credentialsProvider
-            config.awsAccessKeyId.isNullOrBlank() || config.awsSecretKey.isNullOrBlank() -> when {
-                !config.awsProfile.isNullOrBlank() ->
-                    ProfileCredentialsProvider.create(config.awsProfile)
-                config.lookupDefaultAwsCredentials -> return
-                else -> AnonymousCredentialsProvider.create()
-            }
+            config.credentialsProvider != null ->
+                config.credentialsProvider
+
+            config.awsWebIdentityTokenFile != null ->
+                WebIdentityTokenFileCredentialsProvider.builder()
+                    .roleArn(config.awsRoleARN)
+                    .webIdentityTokenFile(Paths.get(config.awsWebIdentityTokenFile!!))
+                    .build()
+
+            config.awsAccessKeyId.isNullOrBlank() || config.awsSecretKey.isNullOrBlank() ->
+                when {
+                    !config.awsProfile.isNullOrBlank() ->
+                        ProfileCredentialsProvider.create(config.awsProfile)
+                    config.lookupDefaultAwsCredentials -> return
+                    else -> AnonymousCredentialsProvider.create()
+                }
+
             else ->
                 StaticCredentialsProvider.create(
                     if (config.sessionToken.isNullOrEmpty()) {

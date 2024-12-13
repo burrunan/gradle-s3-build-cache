@@ -36,6 +36,13 @@ open class AwsS3BuildCache : AbstractBuildCache() {
         get() = field ?: System.getenv("S3_BUILD_CACHE_SESSION_TOKEN")
     var awsProfile: String? = null
         get() = field ?: System.getenv("S3_BUILD_CACHE_PROFILE")
+
+    // OIDC Configuration
+    var awsWebIdentityTokenFile: String? = null
+        get() = field ?: System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE")
+    var awsRoleARN: String? = null
+        get() = field ?: System.getenv("AWS_ROLE_ARN")
+
     var lookupDefaultAwsCredentials: Boolean = false
     var credentialsProvider: AwsCredentialsProvider? = null
     var showStatistics: Boolean = true
