@@ -108,9 +108,9 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
         val credentials = when {
             config.credentialsProvider != null -> config.credentialsProvider
             config.awsAccessKeyId.isNullOrBlank() || config.awsSecretKey.isNullOrBlank() -> when {
-                config.lookupDefaultAwsCredentials -> return
                 !config.awsProfile.isNullOrBlank() ->
                     ProfileCredentialsProvider.create(config.awsProfile)
+                config.lookupDefaultAwsCredentials -> return
                 else -> AnonymousCredentialsProvider.create()
             }
             else ->
