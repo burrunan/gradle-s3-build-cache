@@ -86,9 +86,7 @@ ext.isCiServer = System.getenv().containsKey("CI")
 
 buildCache {
     local {
-        // Local build cache is dangerous as it might produce inconsistent results
-        // in case developer modifies files while the build is running
-        enabled = false
+        enabled = true
     }
     remote(com.github.burrunan.s3cache.AwsS3BuildCache) {
         region = 'eu-west-1'
@@ -114,9 +112,7 @@ val isCiServer = System.getenv().containsKey("CI")
 
 buildCache {
     local {
-        // Local build cache is dangerous as it might produce inconsistent results
-        // in case developer modifies files while the build is running
-        enabled = false
+        enabled = true
     }
     remote<com.github.burrunan.s3cache.AwsS3BuildCache> {
         region = "eu-west-1"
