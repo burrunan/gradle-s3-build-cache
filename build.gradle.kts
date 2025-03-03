@@ -11,7 +11,7 @@ import java.util.*
 plugins {
     `maven-publish`
     `kotlin-dsl`
-    id("com.gradle.plugin-publish") version "1.3.0"
+    id("com.gradle.plugin-publish") version "1.3.1"
     id("com.github.vlsi.crlf") version "1.90"
     id("com.github.vlsi.gradle-extensions") version "1.90"
     id("com.github.vlsi.stage-vote-release") version "1.90"
