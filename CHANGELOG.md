@@ -1,3 +1,16 @@
+#### 1.8.5
+ - 2025-03-12 - [4 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.8.4...v1.8.5)
+
+### Added
+ - Support `AWS_WEB_IDENTITY_TOKEN_FILE` OIDC authentication [PR#80](https://github.com/burrunan/gradle-s3-build-cache/pull/80)
+
+### Fixed
+ - Prioritize `awsProfile` over `lookupDefaultAwsCredentials` [PR#83](https://github.com/burrunan/gradle-s3-build-cache/pull/83)
+
+### Changed
+ - Updated software.amazon.awssdk from 2.28.27 to 2.30.33
+ - Updated Gradle from 8.10.2 to 8.13
+
 #### 1.8.4
  - 2024-09-09 - [4 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.8.3...v1.8.4)
 
