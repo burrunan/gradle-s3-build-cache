@@ -5,7 +5,8 @@ import com.github.vlsi.gradle.properties.dsl.props
 import com.github.vlsi.gradle.publishing.dsl.simplifyXml
 import com.github.vlsi.gradle.publishing.dsl.versionFromResolution
 import org.gradle.api.tasks.wrapper.Wrapper.DistributionType
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.util.*
 
 plugins {
@@ -116,8 +117,35 @@ allprojects {
         // Ensure builds are reproducible
         isPreserveFileTimestamps = false
         isReproducibleFileOrder = true
-        dirMode = "775".toInt(8)
-        fileMode = "664".toInt(8)
+        dirPermissions {
+            user {
+                read = true
+                write = true
+                execute = true
+            }
+            group {
+                read = true
+                write = true
+                execute = true
+            }
+            other {
+                read = true
+                execute = true
+            }
+        }
+        filePermissions {
+            user {
+                read = true
+                write = true
+            }
+            group {
+                read = true
+                write = true
+            }
+            other {
+                read = true
+            }
+        }
     }
 
     plugins.withId("java") {
@@ -196,11 +224,11 @@ allprojects {
             }
         }
 
-        tasks.configureEach<KotlinCompile> {
-            kotlinOptions {
+        tasks.configureEach<KotlinJvmCompile> {
+            compilerOptions {
                 val jdkRelease = if (targetJdk < 9) "1.8" else targetJdk.toString()
-                jvmTarget = jdkRelease
-                freeCompilerArgs += "-Xjdk-release=$jdkRelease"
+                jvmTarget = JvmTarget.fromTarget(jdkRelease)
+                freeCompilerArgs.add("-Xjdk-release=$jdkRelease")
             }
         }
 
