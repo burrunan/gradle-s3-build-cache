@@ -11,6 +11,8 @@
  - Updated software.amazon.awssdk from 2.28.27 to 2.30.33
  - Updated Gradle from 8.10.2 to 8.13
 
+Thanks to [@sedexken](https://github.com/sedexken), [@jGleitz](https://github.com/jGleitz) for the contribution.
+
 #### 1.8.4
  - 2024-09-09 - [4 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.8.3...v1.8.4)
 
