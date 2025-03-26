@@ -89,6 +89,7 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
             endpointOverride(URI.create(endpoint))
         }
         transferAcceleration(config)
+        config.s3ClientActions.forEach { it.execute(this) }
         build()
     }
 
@@ -142,7 +143,10 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
     }
 
     private fun S3ClientBuilder.transferAcceleration(config: AwsS3BuildCache) {
-        val s3Conf = S3Configuration.builder().accelerateModeEnabled(config.transferAcceleration).build()
+        val s3Conf = S3Configuration.builder().apply {
+            accelerateModeEnabled(config.transferAcceleration)
+            config.s3ConfigurationActions.forEach { it.execute(this) }
+        }.build()
         serviceConfiguration(s3Conf)
     }
 }

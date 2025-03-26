@@ -140,6 +140,9 @@ class RemoteCacheTest : BaseGradleTest() {
                     forcePathStyle = true
                     push = true
                     credentialsProvider = AnonymousCredentialsProvider.create()
+                    s3configuration {
+                      accelerateModeEnabled(false)
+                    }
                 }
             }
         """.trimIndent()
