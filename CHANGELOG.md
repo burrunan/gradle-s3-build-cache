@@ -1,3 +1,12 @@
+#### 1.9.0
+ - 2025-03-26 - [8 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.8.5...v1.9.0)
+
+### Added
+ - Customization blocks for `S3Client` and `S3Configuration`, see [PR#93](https://github.com/burrunan/gradle-s3-build-cache/pull/93)
+
+### Changed
+ - Updated software.amazon.awssdk from 2.30.33 to 2.3.8
+
 #### 1.8.5
  - 2025-03-12 - [4 commits](https://github.com/burrunan/gradle-s3-build-cache/compare/v1.8.4...v1.8.5)
 
