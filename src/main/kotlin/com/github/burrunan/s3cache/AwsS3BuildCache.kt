@@ -15,8 +15,11 @@
  */
 package com.github.burrunan.s3cache
 
+import org.gradle.api.Action
 import org.gradle.caching.configuration.AbstractBuildCache
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
+import software.amazon.awssdk.services.s3.S3ClientBuilder
+import software.amazon.awssdk.services.s3.S3Configuration
 
 open class AwsS3BuildCache : AbstractBuildCache() {
     var region: String? = null
@@ -51,4 +54,14 @@ open class AwsS3BuildCache : AbstractBuildCache() {
     var showStatisticsWhenWasteExceeds: Long = 100
     var showStatisticsWhenTransferExceeds: Long = 10 * 1024 * 1024
     var transferAcceleration: Boolean? = false
+    internal val s3ClientActions = mutableListOf<Action<S3ClientBuilder>>()
+    internal val s3ConfigurationActions = mutableListOf<Action<S3Configuration.Builder>>()
+
+    fun s3client(action: Action<S3ClientBuilder>) {
+        s3ClientActions += action
+    }
+
+    fun s3configuration(action: Action<S3Configuration.Builder>) {
+        s3ConfigurationActions += action
+    }
 }
