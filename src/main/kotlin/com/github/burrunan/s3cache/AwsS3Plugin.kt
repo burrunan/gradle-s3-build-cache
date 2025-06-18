@@ -18,13 +18,15 @@ package com.github.burrunan.s3cache
 import com.github.burrunan.s3cache.internal.AwsS3BuildCacheServiceFactory
 import com.github.burrunan.s3cache.internal.CURRENT_TASK
 import com.github.burrunan.s3cache.internal.TaskPerformanceInfo
-import org.gradle.StartParameter
 import org.gradle.api.Plugin
 import org.gradle.api.Task
+import org.gradle.api.configuration.BuildFeatures
 import org.gradle.api.execution.TaskExecutionListener
 import org.gradle.api.initialization.Settings
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.TaskState
+import org.gradle.kotlin.dsl.support.serviceOf
+import org.gradle.util.GradleVersion
 
 private val logger = Logging.getLogger(AwsS3Plugin::class.java)
 
@@ -38,15 +40,20 @@ class AwsS3Plugin : Plugin<Settings> {
         registerTaskExecutionListener(settings)
     }
 
-    private val StartParameter.configurationCacheEnabled: Boolean
-        get() = try {
-            javaClass.getMethod("isConfigurationCache").invoke(this) as Boolean
-        } catch (e: Exception) {
-            false
+    private val Settings.configurationCacheEnabled: Boolean
+        get() {
+            if (GradleVersion.current() >= GradleVersion.version("8.5")) {
+                return serviceOf<BuildFeatures>().configurationCache.active.get()
+            }
+            return try {
+                startParameter.javaClass.getMethod("isConfigurationCache").invoke(startParameter) as Boolean
+            } catch (e: Exception) {
+                false
+            }
         }
 
     private fun registerTaskExecutionListener(settings: Settings) {
-        if (settings.startParameter.configurationCacheEnabled) {
+        if (settings.configurationCacheEnabled) {
             return
         }
         settings.gradle.taskGraph.addTaskExecutionListener(object : TaskExecutionListener {
