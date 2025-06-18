@@ -88,8 +88,10 @@ class RemoteCacheTest : BaseGradleTest() {
                 // Configuration cache supports custom caches since 7.5 only: https://github.com/gradle/gradle/issues/14874
                 add(arguments("7.5", ConfigurationCache.ON))
                 add(arguments("7.6.3", ConfigurationCache.ON))
-                add(arguments("8.10.2", ConfigurationCache.ON))
                 add(arguments("8.0.2", ConfigurationCache.ON))
+                add(arguments("8.1", ConfigurationCache.ON))
+                add(arguments("8.5", ConfigurationCache.ON))
+                add(arguments("8.10.2", ConfigurationCache.ON))
             }
         }
     }
@@ -228,9 +230,15 @@ class RemoteCacheTest : BaseGradleTest() {
         if (GradleVersion.version(gradleVersion) < GradleVersion.version("7.0")) {
             fail("Gradle version $gradleVersion does not support configuration cache")
         }
+        val propertyName = if (GradleVersion.version(gradleVersion) >= GradleVersion.version("8.1")) {
+            // https://docs.gradle.org/8.1/userguide/upgrading_version_8.html#configuration_caching_options_renamed
+            "org.gradle.configuration-cache"
+        } else {
+            "org.gradle.unsafe.configuration-cache"
+        }
         // Gradle 6.5 expects values ON, OFF, WARN, so we add the option for 7.0 only
         projectDir.resolve("gradle.properties").toFile().appendText(
-            "\norg.gradle.unsafe.configuration-cache=true\n"
+            "\n$propertyName=true\n"
         )
     }
 }
