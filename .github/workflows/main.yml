@@ -13,19 +13,18 @@ on:
 
 jobs:
   ubuntu-latest:
-    strategy:
-      matrix:
-        jdk: [8, 11]
-    name: Test, JDK ${{ matrix.jdk }}
+    name: Test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 50
-    - name: 'Set up JDK ${{ matrix.jdk }}'
+    - name: 'Set up Java'
       uses: actions/setup-java@v4
       with:
-        java-version: ${{ matrix.jdk }}
+        java-version: |
+          8
+          21
         distribution: 'zulu'
     - uses: actions/cache@v4
       name: Cache ./gradle/caches/
@@ -33,8 +32,13 @@ jobs:
         path: |
           ~/.gradle/caches/
         key: gradle-${{ runner.os }}-caches-${{ hashFiles('build.properties', '**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
-    - name: Build
+    - name: Test with Java 8
       uses: eskatos/gradle-command-action@v3
       with:
         gradle-version: wrapper
         arguments: --no-parallel --no-daemon build
+    - name: Test with Java 21
+      uses: eskatos/gradle-command-action@v3
+      with:
+        gradle-version: wrapper
+        arguments: --no-parallel --no-daemon -PtestJdk=21 build
