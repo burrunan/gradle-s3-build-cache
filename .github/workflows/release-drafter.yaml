@@ -30,7 +30,7 @@ jobs:
               ref: context.sha
             });
             const content = Buffer.from(response.data.content, 'base64').toString();
-            const version = content.match(/^profiler\.version=(.+)$/m)[1];
+            const version = content.match(/^current\.version=(.+)$/m)[1];
             console.log(`Version is ${version}`);
             return version;
 
