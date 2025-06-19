@@ -115,7 +115,7 @@ jobs:
           SIGNING_PGP_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           SIGNING_PGP_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
-          GRADLE_PUBLISH_SECRET: $${ secrets.GRADLE_PUBLISH_SECRET }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
 
       - name: Publish GitHub release
         uses: release-drafter/release-drafter@b1476f6e6eb133afa41ed8589daba6dc69b4d3f5 # v6
