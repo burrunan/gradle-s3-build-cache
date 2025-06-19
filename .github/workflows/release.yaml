@@ -23,10 +23,10 @@ jobs:
       - name: Validate input parameters
         # language=bash
         run: |
-          # Ensure we release from main or release/** branches, ensure version number follows semver
+          # Ensure we release from master or release/** branches, ensure version number follows semver
           BRANCH_NAME=${GITHUB_REF##refs/heads/}
-          if [[ ! "$BRANCH_NAME" =~ ^(main|release/.+)$ ]]; then
-            echo "Error: Release must be created from 'main' or 'release/**' branch. Current branch is '$BRANCH_NAME'"
+          if [[ ! "$BRANCH_NAME" =~ ^(master|release/.+)$ ]]; then
+            echo "Error: Release must be created from 'master' or 'release/**' branch. Current branch is '$BRANCH_NAME'"
             exit 1
           fi
 
