@@ -7,6 +7,7 @@ import com.github.vlsi.gradle.publishing.dsl.versionFromResolution
 import org.gradle.api.tasks.wrapper.Wrapper.DistributionType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import java.time.Duration
 import java.util.*
 
 plugins {
@@ -15,16 +16,20 @@ plugins {
     id("com.gradle.plugin-publish") version "1.3.1"
     id("com.github.vlsi.crlf") version "1.90"
     id("com.github.vlsi.gradle-extensions") version "1.90"
-    id("com.github.vlsi.stage-vote-release") version "1.90"
+    id("com.gradleup.nmcp") version "0.1.5"
+    id("signing")
 }
 
 repositories {
     mavenCentral()
 }
 
+val release by props()
+val useInMemoryPgpKeys by props()
+
 val String.v: String get() = rootProject.extra["$this.version"] as String
 
-val buildVersion = "current".v + releaseParams.snapshotSuffix
+val buildVersion = "current".v + (if (release) "" else "-SNAPSHOT")
 
 println("Building gradle-s3-build-cache $buildVersion")
 
@@ -35,28 +40,8 @@ val skipJavadoc by props()
 val buildJdk by props.int
 val targetJdk by props.int
 val testJdk by props.int
-
-releaseParams {
-    tlp.set("gradle-s3-build-cache")
-    organizationName.set("burrunan")
-    componentName.set("gradle-s3-build-cache")
-    prefixForProperties.set("gh")
-    svnDistEnabled.set(false)
-    sitePreviewEnabled.set(false)
-    nexus {
-        mavenCentral()
-        // https://github.com/marcphilipp/nexus-publish-plugin/issues/35
-        packageGroup.set("com.github.burrunan")
-    }
-    voteText.set {
-        """
-        ${it.componentName} v${it.version}-rc${it.rc} is ready for preview.
-
-        Git SHA: ${it.gitSha}
-        Staging repository: ${it.nexusRepositoryUri}
-        """.trimIndent()
-    }
-}
+val centralPortalPublishingType by props.string
+val centralPortalPublishingTimeout by props.int
 
 dependencies {
     constraints {
@@ -107,6 +92,43 @@ gradlePlugin {
 tasks.wrapper {
     gradleVersion = "8.14.2"
     distributionType = DistributionType.BIN
+}
+
+if (!release) {
+    publishing {
+        repositories {
+            maven {
+                name = "centralSnapshots"
+                url = uri("https://central.sonatype.com/repository/maven-snapshots")
+                credentials(PasswordCredentials::class)
+            }
+        }
+    }
+} else {
+    signing {
+        sign(publishing.publications)
+        if (!useInMemoryPgpKeys) {
+            useGpgCmd()
+        } else {
+            val pgpPrivateKey = System.getenv("SIGNING_PGP_PRIVATE_KEY")
+            val pgpPassphrase = System.getenv("SIGNING_PGP_PASSPHRASE")
+            if (pgpPrivateKey.isNullOrBlank() || pgpPassphrase.isNullOrBlank()) {
+                throw IllegalArgumentException("GPP private key (SIGNING_PGP_PRIVATE_KEY) and passphrase (SIGNING_PGP_PASSPHRASE) must be set")
+            }
+            useInMemoryPgpKeys(
+                pgpPrivateKey,
+                pgpPassphrase
+            )
+        }
+    }
+    nmcp {
+        centralPortal {
+            username = providers.environmentVariable("CENTRAL_PORTAL_USERNAME")
+            password = providers.environmentVariable("CENTRAL_PORTAL_PASSWORD")
+            publishingType = centralPortalPublishingType
+            verificationTimeout = Duration.ofMinutes(centralPortalPublishingTimeout.toLong())
+        }
+    }
 }
 
 allprojects {
