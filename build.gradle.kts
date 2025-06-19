@@ -24,8 +24,8 @@ repositories {
     mavenCentral()
 }
 
-val release by props()
-val useInMemoryPgpKeys by props()
+val release by props(default = false)
+val useInMemoryPgpKeys by props(default = true)
 
 val String.v: String get() = rootProject.extra["$this.version"] as String
 
@@ -40,8 +40,8 @@ val skipJavadoc by props()
 val buildJdk by props.int
 val targetJdk by props.int
 val testJdk by props.int
-val centralPortalPublishingType by props.string
-val centralPortalPublishingTimeout by props.int
+val centralPortalPublishingType = props.string("centralPortalPublishingType", default = "AUTOMATIC")
+val centralPortalPublishingTimeout by props.long
 
 dependencies {
     constraints {
@@ -126,7 +126,7 @@ if (!release) {
             username = providers.environmentVariable("CENTRAL_PORTAL_USERNAME")
             password = providers.environmentVariable("CENTRAL_PORTAL_PASSWORD")
             publishingType = centralPortalPublishingType
-            verificationTimeout = Duration.ofMinutes(centralPortalPublishingTimeout.toLong())
+            verificationTimeout = Duration.ofMinutes(centralPortalPublishingTimeout)
         }
     }
 }
