@@ -1,0 +1,47 @@
+name: Release Drafter
+
+on:
+  push:
+    branches:
+      - main
+      - release/**
+
+jobs:
+  update_release_draft:
+    permissions:
+      # write permission is required to create a github release
+      contents: write
+      # write permission is required for autolabeler
+      # otherwise, read permission is required at least
+      pull-requests: write
+    name: Update Release Draft
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the current version
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        id: current_version
+        with:
+          # language=javascript
+          script: |
+            const response = await github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: 'gradle.properties',
+              ref: context.sha
+            });
+            const content = Buffer.from(response.data.content, 'base64').toString();
+            const version = content.match(/^profiler\.version=(.+)$/m)[1];
+            console.log(`Version is ${version}`);
+            return version;
+
+      # Drafts your next Release notes as Pull Requests are merged into "master"
+      - name: Update release body draft
+        uses: release-drafter/release-drafter@b1476f6e6eb133afa41ed8589daba6dc69b4d3f5 # v6
+        id: prepare_release
+        with:
+          disable-autolabeler: false
+          publish: false
+          latest: ${{ github.ref_name == github.event.repository.default_branch }}
+          version: ${{ steps.current_version.outputs.result }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
