@@ -256,14 +256,6 @@ allprojects {
 
         configure<PublishingExtension> {
             publications {
-                if (project.path != ":") {
-                    create<MavenPublication>(project.name) {
-                        artifactId = project.name
-                        version = rootProject.version.toString()
-                        description = project.description
-                        from(project.components.get("java"))
-                    }
-                }
                 withType<MavenPublication> {
                     // if (!skipJavadoc) {
                     // Eager task creation is required due to
