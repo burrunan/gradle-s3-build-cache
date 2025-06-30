@@ -65,41 +65,12 @@ class RemoteCacheTest : BaseGradleTest() {
         private fun gradleVersionAndSettings(): Iterable<Arguments> {
             if (!isCI) {
                 // Use only the minimum supported Gradle version to make the test faster
-                return listOf(arguments("8.10.2", ConfigurationCache.ON))
+                return listOf(arguments("8.12.1", ConfigurationCache.ON))
             }
             return mutableListOf<Arguments>().apply {
-                if (JavaVersion.current() <= JavaVersion.VERSION_1_8) {
-                    add(arguments("4.1", ConfigurationCache.OFF))
-                    add(arguments("4.4.1", ConfigurationCache.OFF))
-                    add(arguments("4.10.2", ConfigurationCache.OFF))
-                }
-                // Java 11 requires Gradle 5.0+
-                if (JavaVersion.current() <= JavaVersion.VERSION_11) {
-                    addAll(
-                        listOf(
-                            arguments("5.6.2", ConfigurationCache.OFF),
-                            arguments("5.4.1", ConfigurationCache.OFF),
-                            arguments("6.0", ConfigurationCache.OFF),
-                            arguments("6.5", ConfigurationCache.OFF),
-                            arguments("7.0", ConfigurationCache.OFF),
-                        )
-                    )
-                }
-                // Java 17 requires Gradle 7.3+
-                if (JavaVersion.current() <= JavaVersion.VERSION_17) {
-                    add(arguments("7.3.3", ConfigurationCache.OFF))
-                    add(arguments("7.4.2", ConfigurationCache.OFF))
-                    // Configuration cache supports custom caches since 7.5 only: https://github.com/gradle/gradle/issues/14874
-                    add(arguments("7.5", ConfigurationCache.ON))
-                    add(arguments("7.6.3", ConfigurationCache.ON))
-                    add(arguments("8.0.2", ConfigurationCache.ON))
-                    add(arguments("8.1", ConfigurationCache.ON))
-                }
                 // Java 21 requires Gradle 8.5+
                 if (JavaVersion.current() <= JavaVersion.VERSION_21) {
                     add(arguments("8.14.2", ConfigurationCache.ON))
-                    add(arguments("8.10.2", ConfigurationCache.ON))
-                    add(arguments("8.5", ConfigurationCache.ON))
                 }
             }
         }

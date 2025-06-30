@@ -17,6 +17,8 @@ package com.github.burrunan.s3cache.internal
 
 import com.github.burrunan.s3cache.AwsS3BuildCache
 import org.gradle.caching.BuildCacheServiceFactory
+import org.gradle.kotlin.dsl.newInstance
+import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -38,13 +40,16 @@ class AwsS3BuildCacheServiceFactoryTest {
         buildCacheDescriber = NoopBuildCacheDescriber()
     }
 
-    private fun buildCache(action: AwsS3BuildCache.() -> Unit) = AwsS3BuildCache().apply(action)
+    private fun buildCache(action: AwsS3BuildCache.() -> Unit): AwsS3BuildCache {
+        val p = ProjectBuilder.builder().withName("hello").build()
+        return p.objects.newInstance<AwsS3BuildCache>().apply(action)
+    }
 
     @Test
     fun testWhat() {
         val conf = buildCache {
-            region = "us-west-1"
-            bucket = "my-bucket"
+            region.set("us-west-1")
+            bucket.set("my-bucket")
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)
@@ -53,9 +58,9 @@ class AwsS3BuildCacheServiceFactoryTest {
     @Test
     fun prefix() {
         val conf = buildCache {
-            region = "us-west-1"
-            bucket = "my-bucket"
-            prefix = "cache"
+            region.set("us-west-1")
+            bucket.set("my-bucket")
+            prefix.set("cache")
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)
@@ -64,9 +69,8 @@ class AwsS3BuildCacheServiceFactoryTest {
     @Test
     fun testNullHeaders() {
         val conf = buildCache {
-            region = "us-west-1"
-            bucket = "my-bucket"
-            headers = null
+            region.set("us-west-1")
+            bucket.set("my-bucket")
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)
@@ -75,9 +79,9 @@ class AwsS3BuildCacheServiceFactoryTest {
     @Test
     fun testNullHeaderName() {
         val conf = buildCache {
-            region = "us-west-1"
-            bucket = "my-bucket"
-            headers = mapOf(null to "foo")
+            region.set("us-west-1")
+            bucket.set("my-bucket")
+            headers.put("header-name", "foo")
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)
@@ -86,9 +90,9 @@ class AwsS3BuildCacheServiceFactoryTest {
     @Test
     fun testNullHeaderValue() {
         val conf = buildCache {
-            region = "us-west-1"
-            bucket = "my-bucket"
-            headers = mapOf("x-foo" to null)
+            region.set("us-west-1")
+            bucket.set("my-bucket")
+            headers.put("x-foo", "value")
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)
@@ -97,7 +101,7 @@ class AwsS3BuildCacheServiceFactoryTest {
     @Test
     fun testIllegalConfigWithoutRegion() {
         val conf = buildCache {
-            bucket = "my-bucket"
+            bucket.set("my-bucket")
         }
         assertThrows<IllegalStateException> {
             subject.createBuildCacheService(conf, buildCacheDescriber)
@@ -107,7 +111,7 @@ class AwsS3BuildCacheServiceFactoryTest {
     @Test
     fun testIllegalConfigWithoutBucket() {
         val conf = buildCache {
-            region = "us-west-1"
+            region.set("us-west-1")
         }
         assertThrows<IllegalStateException> {
             subject.createBuildCacheService(conf, buildCacheDescriber)
@@ -117,11 +121,11 @@ class AwsS3BuildCacheServiceFactoryTest {
     @Test
     fun testAddAWSSessionCredentials() {
         val conf = buildCache {
-            bucket = "my-bucket"
-            region = "us-west-1"
-            awsAccessKeyId = "any aws access key"
-            awsSecretKey = "any secret key"
-            sessionToken = "any session token"
+            bucket.set("my-bucket")
+            region.set("us-west-1")
+            awsAccessKeyId.set("any aws access key")
+            awsSecretKey.set("any secret key")
+            sessionToken.set("any session token")
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)
@@ -130,9 +134,9 @@ class AwsS3BuildCacheServiceFactoryTest {
     @Test
     fun testAWSProfileCredentials() {
         val conf = buildCache {
-            bucket = "my-bucket"
-            region = "us-west-1"
-            awsProfile = "any aws profile"
+            bucket.set("my-bucket")
+            region.set("us-west-1")
+            awsProfile.set("any aws profile")
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)
@@ -141,8 +145,8 @@ class AwsS3BuildCacheServiceFactoryTest {
     @Test
     fun testAWSProviderCredentials() {
         val conf = buildCache {
-            bucket = "my-bucket"
-            region = "us-west-1"
+            bucket.set("my-bucket")
+            region.set("us-west-1")
             credentialsProvider = AnonymousCredentialsProvider.create()
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
@@ -152,9 +156,9 @@ class AwsS3BuildCacheServiceFactoryTest {
     @Test
     fun kmsKeyId() {
         val conf = buildCache {
-            region = "us-west-1"
-            bucket = "my-bucket"
-            kmsKeyId = "972393be-674f-4bdc-87ff-ea1b2588a1c6"
+            region.set("us-west-1")
+            bucket.set("my-bucket")
+            kmsKeyId.set("972393be-674f-4bdc-87ff-ea1b2588a1c6")
         }
         val service = subject.createBuildCacheService(conf, buildCacheDescriber)
         Assertions.assertNotNull(service)
