@@ -44,7 +44,7 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
             type("AWS S3")
             describe("Region", config.region)
             describe("Bucket", config.bucket)
-            describe("Reduced Redundancy", config.isReducedRedundancy)
+            describe("Reduced Redundancy", config.reducedRedundancy)
             describe("Prefix", config.prefix)
             describe("KMS Key ID", config.kmsKeyId)
             describe("Endpoint", config.endpoint)
@@ -53,16 +53,16 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
         verifyConfig(config)
         return AwsS3BuildCacheService(
             { createS3Client(config) },
-            config.bucket!!,
-            config.prefix,
-            config.kmsKeyId,
-            config.isReducedRedundancy,
-            config.maximumCachedObjectLength,
-            config.showStatistics,
-            config.showStatisticsWhenImpactExceeds,
-            config.showStatisticsWhenSavingsExceeds,
-            config.showStatisticsWhenWasteExceeds,
-            config.showStatisticsWhenTransferExceeds
+            config.bucket.get(),
+            config.prefix.orNull,
+            config.kmsKeyId.orNull,
+            config.reducedRedundancy.get(),
+            config.maximumCachedObjectLength.get(),
+            config.showStatistics.get(),
+            config.showStatisticsWhenImpactExceeds.get(),
+            config.showStatisticsWhenSavingsExceeds.get(),
+            config.showStatisticsWhenWasteExceeds.get(),
+            config.showStatisticsWhenTransferExceeds.get()
         )
     }
 
@@ -73,18 +73,18 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
     }
 
     private fun verifyConfig(config: AwsS3BuildCache) {
-        check(!config.region.isNullOrEmpty()) { "S3 build cache has no AWS region configured" }
-        check(!config.bucket.isNullOrEmpty()) { "S3 build cache has no bucket configured" }
+        check(config.region.isPresent) { "S3 build cache has no AWS region configured" }
+        check(config.bucket.isPresent) { "S3 build cache has no bucket configured" }
     }
 
     private fun createS3Client(config: AwsS3BuildCache) = S3Client.builder().run {
         addHttpHeaders(config)
         addCredentials(config)
-        region(Region.of(config.region))
-        if (config.forcePathStyle) {
+        region(Region.of(config.region.get()))
+        if (config.forcePathStyle.get()) {
             forcePathStyle(true)
         }
-        config.endpoint?.let {
+        config.endpoint.orNull?.let {
             val endpoint = if (it.startsWith("http")) it else "https://${it}"
             endpointOverride(URI.create(endpoint))
         }
@@ -96,7 +96,7 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
     private fun S3ClientBuilder.addHttpHeaders(
         config: AwsS3BuildCache
     ) {
-        config.headers?.let { headers ->
+        config.headers.orNull?.let { headers ->
             overrideConfiguration {
                 for ((key, value) in headers) {
                     if (key != null && value != null) {
@@ -109,33 +109,33 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
 
     private fun S3ClientBuilder.addCredentials(config: AwsS3BuildCache) {
         val credentials = when {
-            config.lookupDefaultAwsCredentials -> return
+            config.lookupDefaultAwsCredentials.orNull == true -> return
 
             config.credentialsProvider != null ->
                 config.credentialsProvider
 
-            config.awsAccessKeyId.orEmpty().isNotBlank() && config.awsSecretKey.orEmpty().isNotBlank() -> {
+            config.awsAccessKeyId.orNull.orEmpty().isNotBlank() && config.awsSecretKey.orNull.orEmpty().isNotBlank() -> {
                 StaticCredentialsProvider.create(
-                    if (config.sessionToken.isNullOrEmpty()) {
-                        AwsBasicCredentials.create(config.awsAccessKeyId, config.awsSecretKey)
+                    if (config.sessionToken.orNull.isNullOrEmpty()) {
+                        AwsBasicCredentials.create(config.awsAccessKeyId.get(), config.awsSecretKey.get())
                     } else {
                         AwsSessionCredentials.create(
-                            config.awsAccessKeyId,
-                            config.awsSecretKey,
-                            config.sessionToken
+                            config.awsAccessKeyId.get(),
+                            config.awsSecretKey.get(),
+                            config.sessionToken.get()
                         )
                     }
                 )
             }
 
-            config.awsWebIdentityTokenFile != null ->
+            config.awsWebIdentityTokenFile.isPresent ->
                 WebIdentityTokenFileCredentialsProvider.builder()
-                    .roleArn(config.awsRoleARN)
-                    .webIdentityTokenFile(Paths.get(config.awsWebIdentityTokenFile!!))
+                    .roleArn(config.awsRoleARN.get())
+                    .webIdentityTokenFile(Paths.get(config.awsWebIdentityTokenFile.get()))
                     .build()
 
-            !config.awsProfile.isNullOrBlank() ->
-                ProfileCredentialsProvider.create(config.awsProfile)
+            config.awsProfile.orNull.orEmpty().isNotBlank() ->
+                ProfileCredentialsProvider.create(config.awsProfile.get())
 
             else -> AnonymousCredentialsProvider.create()
         }
@@ -144,7 +144,7 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
 
     private fun S3ClientBuilder.transferAcceleration(config: AwsS3BuildCache) {
         val s3Conf = S3Configuration.builder().apply {
-            accelerateModeEnabled(config.transferAcceleration)
+            accelerateModeEnabled(config.transferAcceleration.get())
             config.s3ConfigurationActions.forEach { it.execute(this) }
         }.build()
         serviceConfiguration(s3Conf)
