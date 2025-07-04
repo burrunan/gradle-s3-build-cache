@@ -109,24 +109,12 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
 
     private fun S3ClientBuilder.addCredentials(config: AwsS3BuildCache) {
         val credentials = when {
+            config.lookupDefaultAwsCredentials -> return
+
             config.credentialsProvider != null ->
                 config.credentialsProvider
 
-            config.awsWebIdentityTokenFile != null ->
-                WebIdentityTokenFileCredentialsProvider.builder()
-                    .roleArn(config.awsRoleARN)
-                    .webIdentityTokenFile(Paths.get(config.awsWebIdentityTokenFile!!))
-                    .build()
-
-            config.awsAccessKeyId.isNullOrBlank() || config.awsSecretKey.isNullOrBlank() ->
-                when {
-                    !config.awsProfile.isNullOrBlank() ->
-                        ProfileCredentialsProvider.create(config.awsProfile)
-                    config.lookupDefaultAwsCredentials -> return
-                    else -> AnonymousCredentialsProvider.create()
-                }
-
-            else ->
+            config.awsAccessKeyId.orEmpty().isNotBlank() && config.awsSecretKey.orEmpty().isNotBlank() -> {
                 StaticCredentialsProvider.create(
                     if (config.sessionToken.isNullOrEmpty()) {
                         AwsBasicCredentials.create(config.awsAccessKeyId, config.awsSecretKey)
@@ -138,6 +126,18 @@ class AwsS3BuildCacheServiceFactory : BuildCacheServiceFactory<AwsS3BuildCache> 
                         )
                     }
                 )
+            }
+
+            config.awsWebIdentityTokenFile != null ->
+                WebIdentityTokenFileCredentialsProvider.builder()
+                    .roleArn(config.awsRoleARN)
+                    .webIdentityTokenFile(Paths.get(config.awsWebIdentityTokenFile!!))
+                    .build()
+
+            !config.awsProfile.isNullOrBlank() ->
+                ProfileCredentialsProvider.create(config.awsProfile)
+
+            else -> AnonymousCredentialsProvider.create()
         }
         credentialsProvider(credentials)
     }
