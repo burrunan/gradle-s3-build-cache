@@ -62,7 +62,7 @@ dependencies {
     }
     runtimeOnly("software.amazon.awssdk:sts")
 
-    testImplementation(platform("org.junit:junit-bom:5.13.1"))
+    testImplementation(platform("org.junit:junit-bom:5.13.3"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testImplementation("com.adobe.testing:s3mock-junit5:2.17.0") {
