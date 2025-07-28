@@ -16,7 +16,7 @@ plugins {
     id("com.gradle.plugin-publish") version "1.3.1"
     id("com.github.vlsi.crlf") version "2.0.0"
     id("com.github.vlsi.gradle-extensions") version "2.0.0"
-    id("com.gradleup.nmcp") version "0.1.5"
+    id("com.gradleup.nmcp") version "1.0.2"
     id("signing")
 }
 
