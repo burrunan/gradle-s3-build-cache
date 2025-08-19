@@ -23,7 +23,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         java-version: |
-          8
+          17
           21
         distribution: 'zulu'
     - uses: actions/cache@v4
@@ -32,11 +32,11 @@ jobs:
         path: |
           ~/.gradle/caches/
         key: gradle-${{ runner.os }}-caches-${{ hashFiles('build.properties', '**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
-    - name: Test with Java 8
+    - name: Test with Java 17
       uses: eskatos/gradle-command-action@v3
       with:
         gradle-version: wrapper
-        arguments: --no-parallel --no-daemon build
+        arguments: --no-parallel --no-daemon PtestJdk=17 build
     - name: Test with Java 21
       uses: eskatos/gradle-command-action@v3
       with:
