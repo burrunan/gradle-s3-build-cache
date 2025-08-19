@@ -65,7 +65,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.13.4"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
-    testImplementation("com.adobe.testing:s3mock-junit5:2.17.0") {
+    testImplementation("com.adobe.testing:s3mock-junit5:4.7.0") {
         // Gradle has its own logging
         exclude("ch.qos.logback", "logback-classic")
         exclude("org.apache.logging.log4j", "log4j-to-slf4j")
@@ -193,6 +193,10 @@ allprojects {
             configureEach<JavaCompile> {
                 options.encoding = "UTF-8"
                 options.release.set(targetJdk)
+            }
+
+            compileTestJava {
+                options.release.set(testJdk)
             }
 
             afterEvaluate {

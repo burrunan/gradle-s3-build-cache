@@ -23,6 +23,7 @@ Key improvements are (as of 2020-07-24):
 
 * Version 1.0.0 - Gradle 4.1+
 * Gradle configuration cache - Gradle 7.5+, see https://github.com/gradle/gradle/issues/14874
+* Java 8+: the build targets Java 8 bytecode and class libraries. It is recommended to use Java 17+ for launching Gradle though.
 
 ## Use in your project
 
