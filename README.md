@@ -113,13 +113,13 @@ val isCiServer = System.getenv().containsKey("CI")
 
 buildCache {
     local {
-        enabled = true
+        isEnabled = true
     }
     remote<com.github.burrunan.s3cache.AwsS3BuildCache> {
         region = "eu-west-1"
         bucket = "your-bucket"
         prefix = "cache/"
-        push = isCiServer
+        isPush = isCiServer
     }
 }
 ```
