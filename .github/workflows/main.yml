@@ -36,7 +36,7 @@ jobs:
       uses: eskatos/gradle-command-action@v3
       with:
         gradle-version: wrapper
-        arguments: --no-parallel --no-daemon PtestJdk=17 build
+        arguments: --no-parallel --no-daemon -PtestJdk=17 build
     - name: Test with Java 21
       uses: eskatos/gradle-command-action@v3
       with:
