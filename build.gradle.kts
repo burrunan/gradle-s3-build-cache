@@ -14,8 +14,8 @@ plugins {
     `maven-publish`
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "2.0.0"
-    id("com.github.vlsi.crlf") version "2.0.0"
-    id("com.github.vlsi.gradle-extensions") version "2.0.0"
+    id("com.github.vlsi.crlf") version "3.0.1"
+    id("com.github.vlsi.gradle-extensions") version "3.0.1"
     id("com.gradleup.nmcp") version "0.1.5"
     id("signing")
 }
