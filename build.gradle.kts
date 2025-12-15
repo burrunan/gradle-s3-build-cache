@@ -6,12 +6,14 @@ import com.github.vlsi.gradle.publishing.dsl.simplifyXml
 import com.github.vlsi.gradle.publishing.dsl.versionFromResolution
 import org.gradle.api.tasks.wrapper.Wrapper.DistributionType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.time.Duration
 import java.util.*
 
 plugins {
     `maven-publish`
+    kotlin("jvm")
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "2.0.0"
     id("com.github.vlsi.crlf") version "3.0.1"
@@ -252,7 +254,28 @@ allprojects {
 
         tasks.configureEach<KotlinJvmCompile> {
             compilerOptions {
+                @Suppress("DEPRECATION")
+                val kotlinVersion = KotlinVersion.KOTLIN_1_9
+                apiVersion = kotlinVersion
+                languageVersion = kotlinVersion
+            }
+        }
+
+        kotlin {
+            coreLibrariesVersion = "1.9.20"
+        }
+
+        tasks.compileKotlin {
+            compilerOptions {
                 val jdkRelease = if (targetJdk < 9) "1.8" else targetJdk.toString()
+                jvmTarget = JvmTarget.fromTarget(jdkRelease)
+                freeCompilerArgs.add("-Xjdk-release=$jdkRelease")
+            }
+        }
+
+        tasks.compileTestKotlin {
+            compilerOptions {
+                val jdkRelease = testJdk.toString()
                 jvmTarget = JvmTarget.fromTarget(jdkRelease)
                 freeCompilerArgs.add("-Xjdk-release=$jdkRelease")
             }
