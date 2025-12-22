@@ -51,7 +51,7 @@ dependencies {
             because("httpclient 4.5.13 fails to verify *.s3.amazonaws.com certificates, see https://github.com/burrunan/gradle-s3-build-cache/issues/23")
         }
     }
-    implementation(platform("software.amazon.awssdk:bom:2.40.8"))
+    implementation(platform("software.amazon.awssdk:bom:2.40.13"))
     implementation("software.amazon.awssdk:sso") {
         because("Needed to automatically enable AWS SSO login, see https://stackoverflow.com/a/67824174")
     }
