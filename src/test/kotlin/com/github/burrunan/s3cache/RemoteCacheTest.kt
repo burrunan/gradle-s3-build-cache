@@ -94,9 +94,11 @@ class RemoteCacheTest : BaseGradleTest() {
                     add(arguments("7.6.3", ConfigurationCache.ON))
                     add(arguments("8.0.2", ConfigurationCache.ON))
                     add(arguments("8.1", ConfigurationCache.ON))
+                    add(arguments("9.4.1", ConfigurationCache.ON))
                 }
                 // Java 21 requires Gradle 8.5+
                 if (JavaVersion.current() <= JavaVersion.VERSION_21) {
+                    add(arguments("9.4.1", ConfigurationCache.ON))
                     add(arguments("8.14.2", ConfigurationCache.ON))
                     add(arguments("8.10.2", ConfigurationCache.ON))
                     add(arguments("8.5", ConfigurationCache.ON))
@@ -165,14 +167,20 @@ class RemoteCacheTest : BaseGradleTest() {
     fun cacheStoreWorks(gradleVersion: String, configurationCache: ConfigurationCache) {
         val outputFile = "build/out.txt"
         enableConfigurationCache(gradleVersion, configurationCache)
+
+        var destinationProp = "outputFile"
+        if (GradleVersion.version(gradleVersion) >= GradleVersion.version("9.0")) {
+            destinationProp = "destinationFile"
+        }
+
         projectDir.resolve("build.gradle").write(
             """
             tasks.create('props', WriteProperties) {
-              outputFile = file("$outputFile")
+              $destinationProp = file("$outputFile")
               property("hello", "world")
             }
             tasks.create('props2', WriteProperties) {
-              outputFile = file("${outputFile}2")
+              $destinationProp = file("${outputFile}2")
               property("hello", "world2")
             }
         """.trimIndent()
