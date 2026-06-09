@@ -1,10 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:recommended"
   ],
   "labels": ["dependencies"],
   "schedule": ["every 3 weeks on Monday"],
+  "automerge": true,
   "packageRules": [
     {
       "matchPackagePrefixes": ["com.github.vlsi"],
