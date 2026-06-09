@@ -8,6 +8,10 @@ on:
         type: string
         default: ''
         description: Release version number (without v, defaults to gradle.properties)
+  schedule:
+    # Release on the 1st of every month at 09:07 UTC.
+    # Scheduled runs use the version from gradle.properties (no input is passed).
+    - cron: '7 9 1 * *'
 
 jobs:
   publish-release:
