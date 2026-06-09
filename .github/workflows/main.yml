@@ -33,12 +33,12 @@ jobs:
           ~/.gradle/caches/
         key: gradle-${{ runner.os }}-caches-${{ hashFiles('build.properties', '**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
     - name: Test with Java 17
-      uses: eskatos/gradle-command-action@v3
+      uses: eskatos/gradle-command-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
       with:
         gradle-version: wrapper
         arguments: --no-parallel --no-daemon -PtestJdk=17 build
     - name: Test with Java 21
-      uses: eskatos/gradle-command-action@v3
+      uses: eskatos/gradle-command-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
       with:
         gradle-version: wrapper
         arguments: --no-parallel --no-daemon -PtestJdk=21 build
