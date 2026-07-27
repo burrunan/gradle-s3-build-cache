@@ -17,6 +17,7 @@
 package com.github.burrunan.s3cache
 
 import com.adobe.testing.s3mock.S3MockApplication
+import com.adobe.testing.s3mock.junit5.S3MockExtension
 import org.gradle.api.JavaVersion
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GradleVersion
@@ -51,13 +52,13 @@ class RemoteCacheTest : BaseGradleTest() {
 
         @JvmField
         @RegisterExtension
-        val s3mock = S3MockBuilder()
-            .withParameter("spring.main.banner-mode", "off")
-            .withParameter("server.ssl.key-store", "classpath:test_keystore.jks")
-            .withParameter("server.ssl.key-alias", "selfsigned")
-            .withParameter("server.ssl.key-password", "password")
-            .withParameter("server.ssl.key-store-password", "password")
-            .withParameter("com.adobe.testing.s3mock.domain.validKmsKeys", "arn:aws:kms:us-east-1:47110815:key/972393be-674f-4bdc-87ff-ea1b2588a1c6")
+        val s3mock = S3MockExtension.builder()
+            .withProperty("spring.main.banner-mode", "off")
+            .withProperty("server.ssl.key-store", "classpath:test_keystore.jks")
+            .withProperty("server.ssl.key-alias", "selfsigned")
+            .withProperty("server.ssl.key-password", "password")
+            .withProperty("server.ssl.key-store-password", "password")
+            .withValidKmsKeys("arn:aws:kms:us-east-1:47110815:key/972393be-674f-4bdc-87ff-ea1b2588a1c6")
             .withInitialBuckets(BUCKET_NAME)
             .build()
 
