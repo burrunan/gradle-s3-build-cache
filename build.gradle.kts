@@ -70,7 +70,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:6.1.2"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
-    testImplementation("com.adobe.testing:s3mock-junit5:4.12.4") {
+    testImplementation("com.adobe.testing:s3mock-junit5:5.1.0") {
         // Gradle has its own logging
         exclude("ch.qos.logback", "logback-classic")
         exclude("org.apache.logging.log4j", "log4j-to-slf4j")
