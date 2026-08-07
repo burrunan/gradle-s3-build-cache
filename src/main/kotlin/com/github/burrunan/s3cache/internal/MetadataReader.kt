@@ -17,8 +17,8 @@
 package com.github.burrunan.s3cache.internal
 
 import com.github.burrunan.s3cache.internal.tar.TarInputStream
-import org.gradle.caching.BuildCacheEntryWriter
 import java.io.File
+import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.zip.GZIPInputStream
@@ -47,34 +47,32 @@ fun CacheEntryMetadata(map: Map<String, String>) = CacheEntryMetadata(
     gradleVersion = map["gradleVersion"]
 )
 
-fun BuildCacheEntryWriter.readBuildMetadata(): CacheEntryMetadata? = try {
-    file()?.readBuildMetadata()
+internal fun File.readBuildMetadata(): CacheEntryMetadata? = try {
+    inputStream().use { it.readBuildMetadata() }
 } catch (ignore: Throwable) {
     null
 }
 
-fun File.readBuildMetadata(): CacheEntryMetadata? {
+internal fun InputStream.readBuildMetadata(): CacheEntryMetadata? {
     try {
-        inputStream().use { fileStream ->
-            GZIPInputStream(fileStream).use { ungzip ->
-                TarInputStream(ungzip, StandardCharsets.UTF_8.name()).use { tar ->
-                    val entry = tar.nextEntry ?: return null
-                    if (!entry.isFile || entry.name != "METADATA" || entry.size > 10000) {
-                        return null
-                    }
-                    val buffer = ByteArray(entry.size.toInt())
-                    if (tar.read(buffer) != buffer.size) {
-                        return null
-                    }
-                    val parsed = Properties().apply { load(buffer.inputStream()) }
-                    return CacheEntryMetadata(
-                        buildInvocationId = parsed.getProperty("buildInvocationId"),
-                        identity = parsed.getProperty("identity"),
-                        executionTime = parsed.getProperty("executionTime")?.toLong(),
-                        operatingSystem = parsed.getProperty("operatingSystem"),
-                        gradleVersion = parsed.getProperty("gradleVersion")
-                    )
+        GZIPInputStream(this).use { ungzip ->
+            TarInputStream(ungzip, StandardCharsets.UTF_8.name()).use { tar ->
+                val entry = tar.nextEntry ?: return null
+                if (!entry.isFile || entry.name != "METADATA" || entry.size > 10000) {
+                    return null
                 }
+                val buffer = ByteArray(entry.size.toInt())
+                if (tar.read(buffer) != buffer.size) {
+                    return null
+                }
+                val parsed = Properties().apply { load(buffer.inputStream()) }
+                return CacheEntryMetadata(
+                    buildInvocationId = parsed.getProperty("buildInvocationId"),
+                    identity = parsed.getProperty("identity"),
+                    executionTime = parsed.getProperty("executionTime")?.toLong(),
+                    operatingSystem = parsed.getProperty("operatingSystem"),
+                    gradleVersion = parsed.getProperty("gradleVersion")
+                )
             }
         }
     } catch (ignore: Throwable) {

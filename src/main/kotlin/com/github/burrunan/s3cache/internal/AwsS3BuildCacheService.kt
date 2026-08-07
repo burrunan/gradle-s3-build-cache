@@ -25,12 +25,10 @@ import org.gradle.caching.BuildCacheService
 import org.gradle.util.GradleVersion
 import software.amazon.awssdk.core.exception.SdkException
 import software.amazon.awssdk.core.exception.SdkServiceException
-import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 import software.amazon.awssdk.services.s3.model.StorageClass
-import java.io.ByteArrayOutputStream
 import java.util.*
 import kotlin.math.absoluteValue
 
@@ -49,10 +47,6 @@ class AwsS3BuildCacheService internal constructor(
     private val showStatisticsWhenWasteExceeds: Long,
     private val showStatisticsWhenTransferExceeds: Long
 ) : BuildCacheService {
-    companion object {
-        private const val BUILD_CACHE_CONTENT_TYPE = "application/vnd.gradle.build-cache-artifact"
-    }
-
     // S3 client is created lazily, so it is created at execution time rather than configuration time
     private val s3 by lazy(s3Factory)
 
@@ -231,7 +225,7 @@ class AwsS3BuildCacheService internal constructor(
         }
         bytesProcessed(itemSize)
         logger.info("Storing cache entry '{}' to S3 bucket", bucketPath)
-        val metadata = writer.readBuildMetadata() ?: CURRENT_TASK.get()?.let {
+        val metadata = cacheEntryContentAdapter.readBuildMetadata(writer) ?: CURRENT_TASK.get()?.let {
             CacheEntryMetadata(
                 buildInvocationId = buildId,
                 identity = it.path,
@@ -259,11 +253,7 @@ class AwsS3BuildCacheService internal constructor(
                         it.storageClass(StorageClass.REDUCED_REDUNDANCY)
                     }
                 },
-                writer.file()?.let { RequestBody.fromFile(it) } ?: RequestBody.fromBytes(
-                    ByteArrayOutputStream()
-                        .also { os -> writer.writeTo(os) }
-                        .toByteArray()
-                )
+                cacheEntryContentAdapter.createRequestBody(writer)
             )
         } catch (e: SdkException) {
             throw BuildCacheException(
