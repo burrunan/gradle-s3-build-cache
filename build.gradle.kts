@@ -15,11 +15,11 @@ plugins {
     `maven-publish`
     kotlin("jvm")
     `kotlin-dsl`
-    id("com.gradle.plugin-publish") version "2.1.1"
-    id("com.github.vlsi.crlf") version "3.0.2"
-    id("com.github.vlsi.gradle-extensions") version "3.0.2"
-    id("com.gradleup.nmcp") version "1.6.1"
-    id("com.gradleup.nmcp.aggregation") version "1.6.1"
+    id("com.gradle.plugin-publish") version "2.0.0"
+    id("com.github.vlsi.crlf") version "3.0.1"
+    id("com.github.vlsi.gradle-extensions") version "3.0.1"
+    id("com.gradleup.nmcp") version "1.5.0"
+    id("com.gradleup.nmcp.aggregation") version "1.5.0"
     id("signing")
 }
 
@@ -54,7 +54,7 @@ dependencies {
     }
     nmcpAggregation(project(":"))
 
-    implementation(platform("software.amazon.awssdk:bom:2.49.3"))
+    implementation(platform("software.amazon.awssdk:bom:2.46.6"))
     implementation("software.amazon.awssdk:sso") {
         because("Needed to automatically enable AWS SSO login, see https://stackoverflow.com/a/67824174")
     }
@@ -67,10 +67,10 @@ dependencies {
     }
     runtimeOnly("software.amazon.awssdk:sts")
 
-    testImplementation(platform("org.junit:junit-bom:6.1.2"))
+    testImplementation(platform("org.junit:junit-bom:6.1.0"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
-    testImplementation("com.adobe.testing:s3mock-junit5:4.12.4") {
+    testImplementation("com.adobe.testing:s3mock-junit5:4.11.0") {
         // Gradle has its own logging
         exclude("ch.qos.logback", "logback-classic")
         exclude("org.apache.logging.log4j", "log4j-to-slf4j")
@@ -95,7 +95,7 @@ gradlePlugin {
 }
 
 tasks.wrapper {
-    gradleVersion = "9.6.1"
+    gradleVersion = "9.7.0"
     distributionType = DistributionType.BIN
 }
 
@@ -257,8 +257,8 @@ allprojects {
 
         tasks.configureEach<KotlinJvmCompile> {
             compilerOptions {
-                @Suppress("DEPRECATION")
-                val kotlinVersion = KotlinVersion.KOTLIN_1_9
+                // Gradle 9.7 embeds a Kotlin compiler that no longer supports language version 1.9
+                val kotlinVersion = KotlinVersion.KOTLIN_2_0
                 apiVersion = kotlinVersion
                 languageVersion = kotlinVersion
             }
