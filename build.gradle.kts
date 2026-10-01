@@ -16,8 +16,8 @@ plugins {
     kotlin("jvm")
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "2.1.1"
-    id("com.github.vlsi.crlf") version "3.0.2"
-    id("com.github.vlsi.gradle-extensions") version "3.0.2"
+    id("com.github.vlsi.crlf") version "4.0.0"
+    id("com.github.vlsi.gradle-extensions") version "4.0.0"
     id("com.gradleup.nmcp") version "1.6.1"
     id("com.gradleup.nmcp.aggregation") version "1.6.1"
     id("signing")
