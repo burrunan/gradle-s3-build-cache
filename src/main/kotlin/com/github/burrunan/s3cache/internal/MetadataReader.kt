@@ -40,13 +40,14 @@ class CacheEntryMetadata(
 }
 
 fun CacheEntryMetadata(map: Map<String, String>): CacheEntryMetadata {
-    // S3 user metadata keys are case-insensitive and are returned lower-cased,
-    // so look keys up case-insensitively (values stay as-is)
+    // A camelCase key that toMap writes comes back from S3 lower-cased, so the lookup ignores case
+    // https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingMetadata.html
     val lookup = TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER).apply { putAll(map) }
     return CacheEntryMetadata(
         buildInvocationId = lookup["buildInvocationId"],
         identity = lookup["identity"],
-        executionTime = lookup["executionTime"]?.toLong(),
+        // A foreign value that does not parse must not throw: Gradle disables the remote cache on error
+        executionTime = lookup["executionTime"]?.toLongOrNull(),
         operatingSystem = lookup["operatingSystem"],
         gradleVersion = lookup["gradleVersion"]
     )
