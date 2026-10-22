@@ -39,13 +39,19 @@ class CacheEntryMetadata(
     }
 }
 
-fun CacheEntryMetadata(map: Map<String, String>) = CacheEntryMetadata(
-    buildInvocationId = map["buildInvocationId"],
-    identity = map["identity"],
-    executionTime = map["executionTime"]?.toLong(),
-    operatingSystem = map["operatingSystem"],
-    gradleVersion = map["gradleVersion"]
-)
+fun CacheEntryMetadata(map: Map<String, String>): CacheEntryMetadata {
+    // A camelCase key that toMap writes comes back from S3 lower-cased, so the lookup ignores case
+    // https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingMetadata.html
+    val lookup = TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER).apply { putAll(map) }
+    return CacheEntryMetadata(
+        buildInvocationId = lookup["buildInvocationId"],
+        identity = lookup["identity"],
+        // A foreign value that does not parse must not throw: Gradle disables the remote cache on error
+        executionTime = lookup["executionTime"]?.toLongOrNull(),
+        operatingSystem = lookup["operatingSystem"],
+        gradleVersion = lookup["gradleVersion"]
+    )
+}
 
 fun BuildCacheEntryWriter.readBuildMetadata(): CacheEntryMetadata? = try {
     file()?.readBuildMetadata()

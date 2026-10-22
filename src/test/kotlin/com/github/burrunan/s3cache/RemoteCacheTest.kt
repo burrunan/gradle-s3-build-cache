@@ -17,11 +17,13 @@
 package com.github.burrunan.s3cache
 
 import com.adobe.testing.s3mock.S3MockApplication
+import com.github.burrunan.s3cache.internal.CacheEntryMetadata
 import org.gradle.api.JavaVersion
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GradleVersion
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.fail
 import org.junit.jupiter.api.parallel.Execution
@@ -30,6 +32,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier
 
@@ -235,6 +238,28 @@ class RemoteCacheTest : BaseGradleTest() {
                 "second execution => task should be resolved from cache"
             }
         }
+    }
+
+    /**
+     * S3Mock lower-cases user metadata keys as S3 does, so this pins the casing MetadataReaderTest
+     * can only assume. If a later S3Mock stopped lower-casing, the test would pass and guard nothing.
+     */
+    @Test
+    fun metadataSurvivesTheRoundTripThroughS3(s3Client: S3Client) {
+        val stored = CacheEntryMetadata(
+            buildInvocationId = "m6e4sb4dmrc5zdnykb5v465pry",
+            identity = ":validatePlugins",
+            executionTime = 17L,
+            operatingSystem = "Mac OS X",
+            gradleVersion = "6.3"
+        )
+        s3Client.putObject(
+            { it.bucket(BUCKET_NAME).key("metadata-round-trip").metadata(stored.toMap()) },
+            RequestBody.fromString("cache entry")
+        )
+        val loaded = s3Client.getObject { it.bucket(BUCKET_NAME).key("metadata-round-trip") }
+            .use { CacheEntryMetadata(it.response().metadata()) }
+        assertEquals(stored.toMap(), loaded.toMap())
     }
 
     private fun enableConfigurationCache(

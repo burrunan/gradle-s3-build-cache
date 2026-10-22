@@ -199,7 +199,7 @@ The plugin prints cache statistics at the end of the build (you can disable it w
 ```
 BUILD SUCCESSFUL in 6s
 1 actionable task: 1 executed
-S3 cache 232ms saved (242ms saved on hits, 10ms wasted on misses), reads: 2, hits: 1, elapsed: 91ms, processed: 477 B
+S3 cache 232ms saved (242ms saved on hits, 10ms wasted on misses), reads: 2, hits: 1, elapsed: 91ms, received: 477 B
 S3 cache writes: 1, elapsed: 121ms, sent to cache: 472 B
 ```
 
@@ -213,7 +213,7 @@ and `wasted on hits` means the estimated execution time would be less than the c
 * `reads: 2` – number load requests to the remote cache
 * `hits: 1` – number items loaded from the remote cache
 * `elapsed: 233ms` – total time spent on loading items from remote cache
-* `processed: 0 B` – number of bytes loaded from the remote cache
+* `received: 477 B` – number of bytes loaded from the remote cache
 
 S3 writes:
 * `cache writes: 1` – number of store requests to the remote cache
@@ -232,6 +232,8 @@ and it might be useful to analyze space consumption.
 | executionTime     | Long        | 189871                     | Task execution time, milliseconds |
 | operatingSystem   | String      | Linux                      | Operating system |
 | gradleVersion     | String      | 6.3                        | Gradle version |
+
+S3 returns user metadata keys lower-cased, so `aws s3api head-object` shows `executiontime` where the table says `executionTime`.
 
 ### Expiring cache entries
 
