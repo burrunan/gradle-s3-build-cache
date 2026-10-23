@@ -19,11 +19,6 @@ package com.github.burrunan.s3cache.internal
 class TaskPerformanceInfo(
     val path: String,
     val executionStarted: Long
-) {
-    var cacheLoadDuration: Long? = null
-    var cacheLoadSavingsStopwatch: Stopwatch? = null
-    var cacheLoadWasteStopwatch: Stopwatch? = null
-    var metadata: CacheEntryMetadata? = null
-}
+)
 
 val CURRENT_TASK = ThreadLocal<TaskPerformanceInfo>()
