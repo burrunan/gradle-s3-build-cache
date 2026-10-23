@@ -21,6 +21,13 @@ import java.util.concurrent.atomic.AtomicLong
 
 class Stopwatch {
     val elapsed: Long get() = elapsedTime.get()
+
+    /**
+     * Number of samples taken: one per [invoke] call and one per [increment] call.
+     *
+     * A caller that tells an [elapsed] of zero from the absence of any sample reads this count, so
+     * [increment] raises it even though it starts nothing.
+     */
     val starts: Int get() = startCount.get()
     val bytes: Long get() = bytesProcessed.get()
 

@@ -19,6 +19,7 @@ package com.github.burrunan.s3cache
 import com.adobe.testing.s3mock.S3MockApplication
 import com.github.burrunan.s3cache.internal.CacheEntryMetadata
 import org.gradle.api.JavaVersion
+import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GradleVersion
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -171,10 +172,7 @@ class RemoteCacheTest : BaseGradleTest() {
         val outputFile = "build/out.txt"
         enableConfigurationCache(gradleVersion, configurationCache)
 
-        var destinationProp = "outputFile"
-        if (GradleVersion.version(gradleVersion) >= GradleVersion.version("9.0")) {
-            destinationProp = "destinationFile"
-        }
+        val destinationProp = destinationProperty(gradleVersion)
 
         projectDir.resolve("build.gradle").write(
             """
@@ -241,6 +239,125 @@ class RemoteCacheTest : BaseGradleTest() {
     }
 
     /**
+     * A cache hit reports the execution time it saved over fetching the item from S3.
+     *
+     * The estimate used to be computed by a `TaskExecutionListener`, which Gradle rejects under the
+     * configuration cache, so such a build printed `S3 cache no impact` however much the cache saved
+     * it (issue #60).
+     */
+    @ParameterizedTest
+    @MethodSource("gradleVersionAndSettings")
+    fun aCacheHitReportsTheExecutionTimeItSaved(
+        gradleVersion: String,
+        configurationCache: ConfigurationCache
+    ) {
+        enableConfigurationCache(gradleVersion, configurationCache)
+        projectDir.resolve("build.gradle").write(
+            """
+            tasks.create('slow', WriteProperties) {
+              ${destinationProperty(gradleVersion)} = file("build/slow.txt")
+              property("hello", "world")
+              doLast {
+                // The saved time is the recorded execution time less the time S3Mock took to serve
+                // the item, so the task has to run long enough for the difference to keep its sign
+                Thread.sleep(1000)
+              }
+            }
+            """.trimIndent()
+        )
+        prepare(gradleVersion, "slow", "-i").build()
+        discardLocalBuildState()
+
+        val fromCache = prepare(gradleVersion, "slow", "-i").build()
+
+        assertEquals(TaskOutcome.FROM_CACHE, fromCache.task(":slow")?.outcome) {
+            "the second build should load :slow from the S3 cache"
+        }
+        assertEquals(
+            "S3 cache <time> saved on hits, hits: 1, elapsed: <time>, received: <size>",
+            fromCache.cacheReadSummary(),
+            "cache read summary of the second build"
+        )
+    }
+
+    /**
+     * A lookup that finds nothing reports the time it spent looking.
+     *
+     * Misses went unreported alongside hits under the configuration cache (issue #60).
+     */
+    @ParameterizedTest
+    @MethodSource("gradleVersionAndSettings")
+    fun aCacheMissReportsTheTimeItWasted(
+        gradleVersion: String,
+        configurationCache: ConfigurationCache
+    ) {
+        enableConfigurationCache(gradleVersion, configurationCache)
+        val destinationProp = destinationProperty(gradleVersion)
+        projectDir.resolve("build.gradle").write(
+            """
+            // Three lookups, so that the time they take does not round down to zero milliseconds,
+            // which the summary would report as `no impact` rather than as time wasted
+            (1..3).each { i ->
+              tasks.create("props${'$'}i", WriteProperties) {
+                $destinationProp = file("build/out${'$'}{i}.txt")
+                property("hello", "world${'$'}i")
+              }
+            }
+            """.trimIndent()
+        )
+
+        val emptyCache = prepare(gradleVersion, "props1", "props2", "props3", "-i").build()
+
+        assertEquals(TaskOutcome.SUCCESS, emptyCache.task(":props1")?.outcome) {
+            "an empty cache leaves :props1 to execute"
+        }
+        assertEquals(
+            "S3 cache <time> wasted on misses, reads: 3, elapsed: <time>",
+            emptyCache.cacheReadSummary(),
+            "cache read summary of a build against an empty cache"
+        )
+    }
+
+    /**
+     * A hit whose cache item records no execution time is counted apart and left out of the estimate.
+     *
+     * Such an item used to contribute `0 - taskDuration` to the savings, which reported a cache hit as
+     * wasted time, and the estimate gave no sign that it covered fewer hits than it said.
+     */
+    @ParameterizedTest
+    @MethodSource("gradleVersionAndSettings")
+    fun aHitWithoutAnExecutionTimeIsReportedRatherThanEstimated(
+        gradleVersion: String,
+        configurationCache: ConfigurationCache,
+        s3Client: S3Client
+    ) {
+        enableConfigurationCache(gradleVersion, configurationCache)
+        projectDir.resolve("build.gradle").write(
+            """
+            tasks.create('props', WriteProperties) {
+              ${destinationProperty(gradleVersion)} = file("build/out.txt")
+              property("hello", "world")
+            }
+            """.trimIndent()
+        )
+        prepare(gradleVersion, "props", "-i").build()
+        stripUserMetadataFromTheStoredItem(s3Client)
+        discardLocalBuildState()
+
+        val fromCache = prepare(gradleVersion, "props", "-i").build()
+
+        assertEquals(TaskOutcome.FROM_CACHE, fromCache.task(":props")?.outcome) {
+            "the second build should load :props from the S3 cache"
+        }
+        assertEquals(
+            "S3 cache savings not measured, hits: 1, hits without executionTime: 1, " +
+                    "elapsed: <time>, received: <size>",
+            fromCache.cacheReadSummary(),
+            "cache read summary of a build whose cache item records no execution time"
+        )
+    }
+
+    /**
      * S3Mock lower-cases user metadata keys as S3 does, so this pins the casing MetadataReaderTest
      * can only assume. If a later S3Mock stopped lower-casing, the test would pass and guard nothing.
      */
@@ -261,6 +378,67 @@ class RemoteCacheTest : BaseGradleTest() {
             .use { CacheEntryMetadata(it.response().metadata()) }
         assertEquals(stored.toMap(), loaded.toMap())
     }
+
+    /**
+     * Replaces the single stored cache item with a copy that carries no S3 user metadata.
+     *
+     * The plugin reads the execution time out of that metadata, so a copy without it stands for an
+     * item some other tool wrote, or one this plugin stored while it could not read Gradle's own
+     * metadata out of the archive.
+     */
+    private fun stripUserMetadataFromTheStoredItem(s3Client: S3Client) {
+        val stored = s3Client.listObjectsV2 { it.bucket(BUCKET_NAME) }.contents().single()
+        val body = s3Client.getObjectAsBytes { it.bucket(BUCKET_NAME).key(stored.key()) }.asByteArray()
+        s3Client.putObject({ it.bucket(BUCKET_NAME).key(stored.key()) }, RequestBody.fromBytes(body))
+    }
+
+    /**
+     * Deletes the build output and the task history of the project, so that the next build has to ask
+     * the build cache for every task.
+     *
+     * Deleting the output alone leaves the task history in place, and a daemon whose virtual file
+     * system has not caught up with the deletion then reports the task up to date instead of loading
+     * it from the cache.
+     */
+    private fun discardLocalBuildState() {
+        projectDir.resolve("build").toFile().deleteRecursively()
+        projectDir.resolve(".gradle").toFile().deleteRecursively()
+    }
+
+    /**
+     * Returns the cache read summary line of the build, with every duration and byte count replaced
+     * by a placeholder.
+     *
+     * The figures depend on how fast the machine served the build, so a test asserts the shape of
+     * the line instead. Where the build printed no such line, or more than one, the returned text
+     * says so rather than failing here, so that the assertion reports it.
+     */
+    private fun BuildResult.cacheReadSummary(): String {
+        val summaries = output.lines()
+            .map { it.trim() }
+            .filter { it.startsWith("S3 cache ") && !it.startsWith("S3 cache writes: ") }
+            .map {
+                it.replace(Regex("""\d\d:\d\d:\d\d|\d\d:\d\d|\d+ms|\d+s"""), "<time>")
+                    .replace(Regex("""\d+ [KMG]iB|\d+ B"""), "<size>")
+            }
+        return when (summaries.size) {
+            1 -> summaries[0]
+            0 -> "(the build printed no S3 cache read summary)"
+            else -> summaries.joinToString(" / ", prefix = "(${summaries.size} summaries) ")
+        }
+    }
+
+    /**
+     * Returns the name of the `WriteProperties` property that names the file to write.
+     *
+     * Gradle 9.0 renamed `outputFile` to `destinationFile`.
+     */
+    private fun destinationProperty(gradleVersion: String) =
+        if (GradleVersion.version(gradleVersion) >= GradleVersion.version("9.0")) {
+            "destinationFile"
+        } else {
+            "outputFile"
+        }
 
     private fun enableConfigurationCache(
         gradleVersion: String,

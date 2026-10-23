@@ -32,6 +32,7 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 import software.amazon.awssdk.services.s3.model.StorageClass
 import java.io.ByteArrayOutputStream
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.absoluteValue
 
 private val logger = Logging.getLogger(AwsS3BuildCacheService::class.java)
@@ -63,6 +64,12 @@ class AwsS3BuildCacheService internal constructor(
     private val cacheLoadWaste = Stopwatch()
     private val cacheHits = Stopwatch()
     private val cacheStores = Stopwatch()
+
+    /**
+     * Number of cache hits left out of the savings estimate because the item's S3 metadata carried no
+     * `executionTime` this plugin could read.
+     */
+    private val hitsWithoutExecutionTime = AtomicInteger()
 
     override fun close() {
         fun Long.byteUnits() = when {
@@ -102,7 +109,12 @@ class AwsS3BuildCacheService internal constructor(
 
         if (cacheLoads.starts != 0) {
             val impact = cacheLoadSavings.elapsed - cacheLoadWaste.elapsed
+            // An estimate of zero is a measurement and the absence of one is not, so the first case
+            // counts the estimates taken rather than the time they add up to. The cases after it report
+            // a side only where that side moved the figure, which keeps "no impact" a whole-line answer
             val summary = when {
+                cacheLoadSavings.starts == 0 && cacheLoadWaste.starts == 0 ->
+                    "savings not measured"
                 cacheLoadSavings.elapsed == 0L && cacheLoadWaste.elapsed == 0L ->
                     "no impact"
                 cacheLoadWaste.elapsed == 0L ->
@@ -117,11 +129,17 @@ class AwsS3BuildCacheService internal constructor(
                 if (impact.absoluteValue > showStatisticsWhenImpactExceeds ||
                     cacheLoadSavings.elapsed.absoluteValue > showStatisticsWhenSavingsExceeds ||
                     cacheLoadWaste.elapsed.absoluteValue > showStatisticsWhenWasteExceeds ||
-                    cacheLoads.bytes > showStatisticsWhenTransferExceeds
+                    cacheLoads.bytes > showStatisticsWhenTransferExceeds ||
+                    // An estimate that covers only some of the hits is worth saying out loud: the
+                    // figures above are all zero in that case, so no threshold would surface it
+                    hitsWithoutExecutionTime.get() != 0
                 ) LogLevel.LIFECYCLE else LogLevel.INFO,
                 "S3 cache $summary" +
                         (if (cacheLoads.starts != cacheHits.starts) ", reads: ${cacheLoads.starts}" else "") +
                         (if (cacheHits.starts != 0) ", hits: ${cacheHits.starts}" else "") +
+                        (hitsWithoutExecutionTime.get().let {
+                            if (it != 0) ", hits without executionTime: $it" else ""
+                        }) +
                         (if (cacheLoads.elapsed != 0L) ", elapsed: ${cacheLoads.elapsed.timeUnits()}" else "") +
                         (if (cacheLoads.bytes != 0L) ", received: ${cacheLoads.bytes.byteUnits()}" else "")
             )
@@ -140,21 +158,40 @@ class AwsS3BuildCacheService internal constructor(
         "$prefix$hashCode"
     }
 
+    /**
+     * Records what the loaded item saved or cost towards the statistics [close] prints.
+     *
+     * A hit saves the execution time its metadata records, less the time this build spent fetching
+     * and unpacking the item. A load that yields no usable item charges the time it took as waste,
+     * whether the bucket held nothing, the item exceeded [maximumCachedObjectLength], or the request
+     * failed. The cost of a hit is the load duration rather than the duration of the task that
+     * consumed the item, because the configuration cache rules out the task execution listener that
+     * would measure the task.
+     */
     override fun load(key: BuildCacheKey, reader: BuildCacheEntryReader): Boolean {
-        val loadStarted = cacheLoads.elapsed
-
-        return cacheLoads {
+        // Gradle loads for several tasks at once, and cacheLoads sums the time of all of them, so the
+        // duration of this load is timed here rather than read off the shared stopwatch
+        val loadStarted = System.currentTimeMillis()
+        val metadata = cacheLoads {
             loadInternal(key, reader)
-        }.apply {
-            CURRENT_TASK.get()?.let {
-                it.cacheLoadDuration = cacheLoads.elapsed - loadStarted
-                it.cacheLoadSavingsStopwatch = cacheLoadSavings
-                it.cacheLoadWasteStopwatch = cacheLoadWaste
-            }
         }
+        val loadDuration = System.currentTimeMillis() - loadStarted
+        val executionTime = metadata?.executionTime
+        when {
+            metadata == null -> cacheLoadWaste.increment(loadDuration)
+            executionTime != null -> cacheLoadSavings.increment(executionTime - loadDuration)
+            else -> hitsWithoutExecutionTime.incrementAndGet()
+        }
+        return metadata != null
     }
 
-    private fun Stopwatch.loadInternal(key: BuildCacheKey, reader: BuildCacheEntryReader): Boolean {
+    /**
+     * Returns the S3 metadata of the loaded cache item, or `null` where the item was not loaded.
+     *
+     * A hit returns metadata even where S3 holds none for the item, so the result separates a hit
+     * from a miss and the fields say what the item recorded.
+     */
+    private fun Stopwatch.loadInternal(key: BuildCacheKey, reader: BuildCacheEntryReader): CacheEntryMetadata? {
         val bucketPath = key.getBucketPath()
         logger.info("Loading cache entry '{}' from S3 bucket", bucketPath)
         try {
@@ -172,18 +209,15 @@ class AwsS3BuildCacheService internal constructor(
                         maximumCachedObjectLength
                     )
                     s3Object.abort()
-                    return false
+                    return null
                 }
-                // Propagate metadata so task finished listener can compute time saved/wasted
-                CURRENT_TASK.get()?.let {
-                    it.metadata = CacheEntryMetadata(s3Object.response().metadata())
-                }
+                val metadata = CacheEntryMetadata(s3Object.response().metadata())
                 bytesProcessed(contentLength)
                 cacheHits {
                     reader.readFrom(s3Object)
                 }
+                return metadata
             }
-            return true
         } catch (e: NoSuchBucketException) {
             throw BuildCacheException("Bucket '${bucketName}' not found", e)
         } catch (e: NoSuchKeyException) {
@@ -209,7 +243,7 @@ class AwsS3BuildCacheService internal constructor(
                 )
             }
         }
-        return false
+        return null
     }
 
     override fun store(key: BuildCacheKey, writer: BuildCacheEntryWriter) = cacheStores {

@@ -192,7 +192,7 @@ It is important to measure the efficiency of the caching, otherwise it might hap
 build time (e.g. it downloads too large artifacts over a slow network or cache misses are too frequent).
 
 Luckily many cache items include the time it took to build the task, so when the item is loaded
-from the cache, the time saved can be estimated as `original_task_elapsed_time - from_cache_task_elapsed_time`.
+from the cache, the time saved can be estimated as `original_task_elapsed_time - cache_item_load_time`.
 
 The plugin prints cache statistics at the end of the build (you can disable it with `showStatistics=false`):
 
@@ -206,18 +206,24 @@ S3 cache writes: 1, elapsed: 121ms, sent to cache: 472 B
 S3 reads:
 * `saved: 232ms` – overall estimation of the remote cache impact on the build time 
 Note: this estimation does not account for parallel task execution.
-* `242ms saved on hits` – the estimated time saved by the remote build cache (`original_task_elapsed_time - from_cache_task_elapsed_time`).
+* `242ms saved on hits` – the estimated time saved by the remote build cache (`original_task_elapsed_time - cache_item_load_time`).
 Note: this estimation does not account for parallel task execution. `saved on hits` means the cache helps,
 and `wasted on hits` means the estimated execution time would be less than the cache load time.
 * `10ms wasted on misses` – the amount of time spent for `cache misses`
+* `no impact` – the estimated impact is zero
+* `savings not measured` – the plugin took no estimate at all: either no loaded item carried an
+`executionTime` to compare the load time against, or the lookups failed before any estimate was taken.
+See [S3 metadata](#s3-metadata)
+* `hits without executionTime: 3` – number of loaded items that carried no `executionTime`.
+Those items are left out of `saved on hits`, so the estimate covers the remaining hits only
 * `reads: 2` – number load requests to the remote cache
 * `hits: 1` – number items loaded from the remote cache
-* `elapsed: 233ms` – total time spent on loading items from remote cache
+* `elapsed: 91ms` – total time spent on loading items from remote cache
 * `received: 477 B` – number of bytes loaded from the remote cache
 
 S3 writes:
 * `cache writes: 1` – number of store requests to the remote cache
-* `elapsed: 115ms` – time spent uploading items to the remote cache
+* `elapsed: 121ms` – time spent uploading items to the remote cache
 * `sent to cache: 472 B` – number of bytes sent to the remote cache
 
 ### S3 metadata

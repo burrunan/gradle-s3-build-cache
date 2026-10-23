@@ -52,6 +52,14 @@ class AwsS3Plugin : Plugin<Settings> {
             }
         }
 
+    /**
+     * Publishes the running task, which an item stored for it is named and timed from where Gradle's
+     * own metadata cannot be read out of the item.
+     *
+     * That metadata is the first choice in every build, so this listener is the last resort. Gradle
+     * rejects a [TaskExecutionListener] under the configuration cache, which leaves such a build
+     * without one.
+     */
     private fun registerTaskExecutionListener(settings: Settings) {
         if (settings.configurationCacheEnabled) {
             return
@@ -62,21 +70,6 @@ class AwsS3Plugin : Plugin<Settings> {
             }
 
             override fun afterExecute(task: Task, state: TaskState) {
-                CURRENT_TASK.get()?.run {
-                    val executionFinished = System.currentTimeMillis()
-                    val taskDuration = executionFinished - executionStarted
-                    when (state.skipMessage) {
-                        "FROM-CACHE" ->
-                            cacheLoadSavingsStopwatch?.increment(
-                                (metadata?.executionTime ?: 0) - taskDuration
-                            )
-                        null ->
-                            cacheLoadWasteStopwatch?.increment(
-                                cacheLoadDuration ?: 0
-                            )
-                    }
-                    Unit
-                }
                 // Avoid memory leaks
                 CURRENT_TASK.remove()
             }
