@@ -54,7 +54,7 @@ dependencies {
     }
     nmcpAggregation(project(":"))
 
-    implementation(platform("software.amazon.awssdk:bom:2.57.2"))
+    implementation(platform("software.amazon.awssdk:bom:2.59.1"))
     implementation("software.amazon.awssdk:sso") {
         because("Needed to automatically enable AWS SSO login, see https://stackoverflow.com/a/67824174")
     }
